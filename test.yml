@@ -4,23 +4,21 @@
   hosts: localhost
   become: yes
   tasks:
-  - name: Local host tasts
-    cmd: "whoami"
-    register: output
-    
-  - debug:
-      msg: "{{ output }}"
+    - name: Local host tasts
+      cmd: whoami
+      register: output
+      
+    - debug:
+        msg: "{{ output }}"
       
 - name: Test ansible on other node
   hosts: all
   gather_facts: yes
   become: yes
-  become_user: root
-  become_method: sudo
   tasks:
-  - name: Other host tasts
-    shell: "whoami"
-    register: output
-    
-  - debug:
-      msg: "{{ output }}"
+    - name: Other host tasts
+      cmd: whoami
+      register: output
+      
+    - debug:
+        msg: "{{ output }}"
