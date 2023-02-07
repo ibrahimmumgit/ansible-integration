@@ -11,14 +11,4 @@
     - debug:
         msg: "{{ output }}"
       
-- name: Test ansible on other node
-  hosts: all
-  gather_facts: yes
-  become: yes
-  tasks:
-    - name: Other host tasts
-      cmd: whoami
-      register: output
-      
-    - debug:
-        msg: "{{ output }}"
+
