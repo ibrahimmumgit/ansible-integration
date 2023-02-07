@@ -1,4 +1,3 @@
-
 ---
 - name: Test ansible on other node
   hosts: all
@@ -6,7 +5,7 @@
   become: yes
   tasks:
     - name: Other host tasts
-      cmd: whoami
+      shell: whoami
       register: output
       
     - debug:
