@@ -1,8 +1,9 @@
 ---
 - name: Test local
-  hosts: localhost
+  hosts: all
   gather_facts: yes
   become: yes
+  connection: local
   tasks:
     - name: Local host tasts
       shell: whoami
