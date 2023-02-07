@@ -1,7 +1,19 @@
 ---
+- name: Test local
+  hosts: localhost
+  gather_facts: yes
+  become: yes
+  tasks:
+    - name: Local host tasts
+      shell: whoami
+      register: output
+      
+    - debug:
+        msg: "{{ output }}"
+      
 - name: Test ansible on other node
   hosts: all
-  gather_facts: false
+  gather_facts: yes
   become: yes
   tasks:
     - name: Other host tasts
