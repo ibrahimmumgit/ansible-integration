@@ -1,7 +1,7 @@
 
 ---
 - name: Test local
-  hosts: localhost
+  hosts: all
   become: yes
   tasks:
     - name: Local host tasts
