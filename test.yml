@@ -6,7 +6,7 @@
   connection: local
   tasks:
     - name: Local host tasts
-      shell: whoami
+      shell: hostname
       register: output
       
     - debug:
@@ -18,7 +18,7 @@
   become: yes
   tasks:
     - name: Other host tasts
-      shell: whoami
+      shell: hostname
       register: output
       
     - debug:
