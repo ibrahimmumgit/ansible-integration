@@ -1,16 +1,15 @@
 
 ---
-- name: Test local
-  gather_facts: False
+- name: Test ansible on other node
   hosts: all
+  gather_facts: false
+  become: yes
   tasks:
-
-    - name: ping
-      shell: ping -c 1 -w 2 8.8.8.8
-      ignore_errors: true
-    - shell: ip a s
-      register: output1
+    - name: Other host tasts
+      cmd: whoami
+      register: output
+      
     - debug:
-        var: output1
+        msg: "{{ output }}"
       
 
