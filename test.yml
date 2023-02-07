@@ -2,13 +2,10 @@
 ---
 - name: Test local
   hosts: localhost
-  gather_facts: yes
   become: yes
-  become_user: root
-  become_method: sudo
   tasks:
   - name: Local host tasts
-    shell: "whoami"
+    cmd: "whoami"
     register: output
     
   - debug:
