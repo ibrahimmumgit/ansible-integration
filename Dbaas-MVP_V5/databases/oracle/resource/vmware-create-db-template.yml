@@ -1,18 +1,18 @@
 ---
 - name: Create a VM from ISO Image and convert it to a Template
-  hosts: localhost
-  vars:
-   vcenter_ip: 199.0.0.1
-   vcenter_username: administrator@vsphere.local
-   vcenter_password: defaultpassword
-   db_template_name: test1234
-   datacenter: DBaaS_Datacenter
-   datastore: DBaaSMgmt_DS2
-   iso_path: "[DBaaSMgmt_DS2]ISOs/vmware-rhel-server-7.8-x86_64-dvd.iso"
-   vswitch_name: VM Network
-   guest_id: centos64Guest
-   si_template: true
+  hosts: all
+  connections: local
   tasks:
+   - set_fact:
+      datacenter: C3
+      datastore: datastore1
+      db_template_name: Morpheus-DBAASClone
+      guest_id: rhel7
+      si_template: false
+      vcenter_ip: "192.168.9.70"
+      vcenter_username: "administrator@vsphere.local"
+      vcenter_password: "VMware1!"
+    
    - name: Create a virtual machine from a Custom ISO
      tags: never
      vmware_guest:
