@@ -1,7 +1,7 @@
 ---
 - name: Create a VM from ISO Image and convert it to a Template
   hosts: all
-  connections: local
+  connection: local
   tasks:
    - set_fact:
       datacenter: C3
