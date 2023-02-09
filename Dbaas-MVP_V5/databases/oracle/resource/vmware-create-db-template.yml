@@ -1,8 +1,8 @@
 ---
 - name: Create a VM from ISO Image and convert it to a Template
-  hosts: all
+  hosts: localhost
   gather_facts: false
-  connection: local
+#  connection: local
   tasks:
    - set_fact:
       datacenter: C3
@@ -13,7 +13,7 @@
       vcenter_ip: "192.168.9.70"
       vcenter_username: "administrator@vsphere.local"
       vcenter_password: "VMware1!"
-    
+
    - name: Create a virtual machine from a Custom ISO
      tags: never
      vmware_guest:
@@ -73,8 +73,8 @@
        ansible_ssh_host: "{{ db_machine_ip }}"
        ansible_ssh_port: 22
      when: si_template
-      
-   - debug: 
+
+   - debug:
       msg={{ db_machine_ip }}
      when: si_template
 
@@ -84,7 +84,7 @@
        path: /root/.ssh/known_hosts
        state: absent
      when: si_template
-      
+
 - name: Oracle RDBMS Home Installation
   hosts: db-server
   vars:
@@ -111,10 +111,11 @@
    - name: Pause for 5 mins
      pause:
        minutes: 5
-     
+
 - name: Power off the VM and Create the Template
   hosts: localhost
   become: yes
+#  connection: local
   tasks:
    - name: Power off the VM for the Template Creation
      vmware_guest:
@@ -126,8 +127,8 @@
        validate_certs: False
        name: "{{ db_template_name }}"
        state: poweredoff
-      
-   - name: Convert Database VM to Template 
+
+   - name: Convert Database VM to Template
      vmware_guest:
        hostname: "{{ vcenter_ip }}"
        username: "{{ vcenter_username }}"
