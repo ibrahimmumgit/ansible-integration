@@ -14,6 +14,7 @@
    si_template: true
   tasks:
    - name: Create a virtual machine from a Custom ISO
+     tags: never
      vmware_guest:
        hostname: "{{ vcenter_ip }}"
        username: "{{ vcenter_username }}"
@@ -60,9 +61,10 @@
 
    - debug:
       msg:  VM IP is "{{ deploy.instance.ipv4 }}"
-   - set_fact:
-       db_machine_ip: "{{ deploy.instance.ipv4 }}"
-     when: si_template
+     tags: never
+   #- set_fact:
+   #    db_machine_ip: "{{ deploy.instance.ipv4 }}"
+   #  when: si_template
 
    - name: Adding db vm to inventory
      add_host:
