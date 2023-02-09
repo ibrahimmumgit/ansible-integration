@@ -1,16 +1,11 @@
 ---
-"datacenter": DHCI-DC
-"datastore": DBPA-Vol1
-"db_template_name": oracle_18c_123_new
-"guest_id": centos64Guest
-"iso_path": '[DBPA-Vol1]vmware-rhel-server-7.8-x86_64-dvd.iso'
-"ora_db_version": 18.3.0.0
-"oracle_sw_source_www": 'http://10.3.40.31/orasw'
-"si_template": true
-"vswitch_name": VM Network
-"vcenter_ip": "10.3.73.30"
+"datacenter": C3
+"datastore": datastore1
+"db_template_name": Morpheus-DBAASClone
+"guest_id": rhel7
+"si_template": false
+"vcenter_ip": "192.168.9.70"
 "vcenter_username": "administrator@vsphere.local"
-"vcenter_password": "HP!nvent123"
-"ansible_ssh_user": root
-"ansible_ssh_pass": P@ssw0rd123
+"vcenter_password": "VMware1!"
+
 
