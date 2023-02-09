@@ -1,0 +1,43 @@
+host_fc_wwns: []
+configure_cluster: false
+configure_cluster_new_node: false
+volume_name: "{% if configure_cluster %}v0040_DBaaS_RAC_vol{%else%}v0040_DBaaS_vol{%endif%}"
+host_group_name: "{% if configure_cluster %}orarac-flex{%else%}bmnewgroup{%endif%}"
+cpg: "v0040_DBaaS_RAC"
+lun_size: 70
+number_of_luns: 1
+size_unit: 'GiB'
+snap_cpg: "v0040_DBaaS_RAC"
+autolun: True
+storage_type: "external"
+existing_volume: false
+oracle_asm_dg_redundancy: "external"
+asm_redundancy_vlun_map:
+  external: 1
+  normal: 2
+  high: 3
+storage_type: ASM
+
+# Storage ASM layout for SI and RAC database
+asm_disk_groups:
+  DATA:
+    - dg_name: DATA
+      asm_redundancy: "{{oracle_asm_dg_redundancy}}"
+      lun_size: "{{lun_size|int}}"
+      number_of_luns: "{{number_of_luns|int}}"
+  ARCH:
+    - dg_name: ARCH
+      asm_redundancy: "{{oracle_asm_dg_redundancy}}"
+      lun_size: "{{lun_size|int}}"
+      number_of_luns: "{{number_of_luns|int}}"
+
+# Storage FS layout for SI on FS
+fs_mount_points:
+  DATA:
+    - name: oradata
+      lun_size: "{{lun_size|int}}"
+      number_of_luns: "{{number_of_luns|int}}"
+  ARCH:
+    - name: oraarch
+      lun_size: "{{lun_size|int}}"
+      number_of_luns: "{{number_of_luns|int}}"

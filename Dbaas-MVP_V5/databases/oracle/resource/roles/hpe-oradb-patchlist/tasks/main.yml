@@ -1,0 +1,12 @@
+- name: Get all applied patches
+  shell: "{{ oracle_home }}/OPatch/opatch lspatches"
+  become: true
+  become_user: "{{ oracle_user }}"
+  register: applied_patches_result
+
+- set_fact:
+    applied_patches_list : "{{ applied_patches_result.stdout_lines | reject('search','OPatch succeeded.') | list }}"
+
+- name: SNOW_fetch_facts
+  set_fact:
+    applied_patches: "{{ applied_patches_list | join('\n') }}"

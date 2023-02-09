@@ -1,0 +1,7 @@
+oracle_sid: orclm
+oracle_base: /u01/app/oracle
+ora_db_version: ""
+oracle_install_version_gi: ""
+version: "{% if oracle_install_version_gi %}{{oracle_install_version_gi}}{% else %}{{ora_db_version}}{% endif %}"
+oracle_home: "{{oracle_base}}/{{ version }}/db1-base"
+oracle_user: oracle

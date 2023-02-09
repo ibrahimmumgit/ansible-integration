@@ -1,0 +1,77 @@
+- name: Configure ASM diskgroups data
+  when: storage_type|upper == "ASM" or configure_cluster
+  block:
+  - set_fact:
+      diskgroups: >
+        [
+        {% for diskgroup in asm_disk_groups.keys()%}
+          {% for dg in asm_disk_groups[diskgroup] %}
+            {% set total_luns=asm_redundancy_vlun_map[dg.asm_redundancy|lower]|int * dg.number_of_luns|int %}
+            {% set volumes = [] %}
+            {% for number in range(1,total_luns+1) %}
+              {{ volumes.append({'name':volume_name+'_'+dg.dg_name+'_'+number|string, 'size':dg.lun_size })}}
+            {% endfor%}
+            { "name": "{{dg.dg_name}}", "redundancy": "{{dg.asm_redundancy}}", 'volumes':{{volumes}}},
+          {% endfor %}
+        {% endfor %}
+        ]
+
+  - set_fact:
+      volumes: "{{ volumes|default([]) + item.volumes }}"
+    with_items: "{{diskgroups}}"
+
+  - debug:
+      var: diskgroups
+
+# fs_mount_points:
+#   DATA:
+#     - name: oradata
+#       lun_size: 30
+#       number_of_luns: 2
+#   ARCH:
+#     - name: oraarch
+#       lun_size: 40
+#       number_of_luns: 1
+
+- name: Configure FS volumes data
+  tags: never
+  when: storage_type|upper == "FS"
+  block:
+  - set_fact:
+      mount_points: >
+        [
+        {% for mnt in fs_mount_points.keys()%}
+          {% for pt in fs_mount_points[mnt] %}
+            {% set volumes = [] %}
+            {% for number in range(1,pt.number_of_luns|int+1) %}
+              {{ volumes.append({'name':volume_name+'_'+pt.name+'_'+number|string, 'size':pt.lun_size })}}
+            {% endfor%}
+            { "name": "{{pt.name}}", 'volumes':{{volumes}}},
+          {% endfor %}
+        {% endfor %}
+        ]
+
+- name: Configure FS volumes data
+  when: storage_type|upper == "FS"
+  block:
+  - set_fact:
+      mount_points: >
+        [
+        {% for mnt in fs_mount_points.keys()%}
+          {% for pt in fs_mount_points[mnt] %}
+            {% set total_luns=nodes|int * luns|int %}
+            {% set volumes = [] %}
+            {% for number in range(1,total_luns|int+1) %}
+              {{ volumes.append({'name':volume_name+'_'+pt.name+'_'+number|string, 'size':db_size })}}
+            {% endfor%}
+            { "name": "{{pt.name}}", 'volumes':{{volumes}}},
+          {% endfor %}
+        {% endfor %}
+        ]
+        
+  - set_fact:
+      volumes: "{{ volumes|default([]) + item.volumes }}"
+    with_items: "{{mount_points}}"
+
+  - debug:
+      var: mount_points

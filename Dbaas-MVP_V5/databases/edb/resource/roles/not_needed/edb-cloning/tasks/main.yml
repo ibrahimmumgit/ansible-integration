@@ -1,0 +1,69 @@
+---
+- name: Look for available backups from source server 
+  command: 
+    cmd: "/usr/bin/barman list-backup {{ vmname }}-{{ pg_instance_name }}"
+  delegate_to: "{{ _barman_server_public_ip }}"
+  become: true
+  become_user: barman 
+    
+- name: Create new directory on target server    
+  shell: mkdir -p {{ target_pg_data }}
+  become: true
+  become_user: "{{ pg_superuser }}"
+  when: "'target_server' in {{ group_names }}"
+
+- name: Install Rsync package for recovery on target server
+  yum:
+    name:  rsync
+  become: true
+  
+- name: Find the backup_id 
+  shell: /usr/bin/barman list-backup {{ vmname }}-{{ pg_instance_name }} | head -1 | awk '{ print $2 }'
+  become: true
+  become_user: barman
+  register: backup_id_1 
+  when: "recovery_mode == 'clone' and ( recovery_type == 'full')"
+  
+- set_fact: 
+    full_backup_id: "{{ backup_id_1.stdout | regex_replace('\"','') }}"
+  when: "recovery_mode == 'clone' and ( recovery_type == 'full')"
+  
+- name: Recover edb backup using full_backup
+  command: /usr/bin/barman recover {{ vmname }}-{{ pg_instance_name }} {{ full_backup_id }} {{ target_pg_data }} --remote-ssh-command "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{ pg_superuser }}@{{ target_ip }}"
+  # command: barman recover EDB-803557-port-5444 20210930T153222 {{ target_pg_data }} --remote-ssh-command "ssh enterprisedb@10.3.40.242"
+  become: true
+  become_user: barman  
+  when: "'barmanserver' in {{ group_names }} and ( recovery_type == 'full')"
+
+- name: Recover edb backup using PITR_backup
+  command: /usr/bin/barman recover {{ vmname }}-{{ pg_instance_name }} {{ backup_id }} {{ target_pg_data }} --remote-ssh-command "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{ pg_superuser }}@{{ target_ip }}" --target-action promote --target-time "{{ recovery_time }}"
+  # command: barman recover EDB-803557-port-5444 20210930T153222 {{ target_pg_data }} --remote-ssh-command "ssh enterprisedb@10.3.40.242"
+  become: true
+  become_user: barman  
+  when: "'barmanserver' in {{ group_names }} and ( recovery_type == 'pitr')" 
+      
+- name: Validate backup file restored File and permissions on target server
+  command: ls -ltr {{ target_pg_data }}
+  become: true
+  become_user: "{{ pg_superuser }}" 
+  when: "'target_server' in {{ group_names }}" 
+        
+- name: Change the postgresql.auto.conf to trust 
+  command: sed -i 's/{{ pg_port }}/{{ pg_port }}/g' {{ target_pg_data }}/postgresql.auto.conf 
+  when: "'target_server' in {{ group_names }}"
+    
+- name: Change the cluster name
+  command: sed -i 's/{{ pg_instance_name }}/{{ pg_instance_name }}/g' {{ target_pg_data }}/postgresql.auto.conf 
+  when: "'target_server' in {{ group_names }}"
+  
+- name: EDB | Start target-as{{ pg_version }}-cluster       
+  shell: /usr/edb/as{{ pg_version }}/bin/pg_ctl start -D {{ target_pg_data }}
+  become: true
+  become_user: "{{ pg_superuser }}" 
+  when: "'target_server' in {{ group_names }}"
+      
+- name: SNOW_fetch_facts
+  set_fact:  
+    pg_data: "{{ pg_data }}"
+    pg_port: "{{ port_number }}"
+    pg_instance_number: "{{ cluster_name }}"

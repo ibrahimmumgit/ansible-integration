@@ -1,0 +1,44 @@
+---
+- set_fact:
+    host: "{{host_wwpns_map.0.name}}"
+  when: host_wwpns_map|length != 0
+  delegate_to: localhost
+
+- name: Fetch host volumes
+  hpe3par_host_vlun_facts:
+    storage_system_ip: "{{ storage_system_ip }}"
+    storage_system_username: "{{ storage_system_username }}"
+    storage_system_password: "{{ storage_system_password }}"
+    name: "{{host}}"
+  delegate_to: localhost
+  when: host is defined
+  register: host_vlun_facts
+
+- name: get provisioned volumes
+  set_fact:
+    volume_names: "{{ volumes|map(attribute='name')|list }}"
+
+- name: Delete VLUN
+  hpe3par_vlun:
+    storage_system_ip: "{{ storage_system_ip }}"
+    storage_system_username: "{{ storage_system_username }}"
+    storage_system_password: "{{ storage_system_password }}"
+    state: unexport_volume_from_host
+    host_name: "{{ host }}"
+    volume_name: "{{ item.vol_name }}"
+    lunid: "{{ item.lun_id }}"
+  run_once: true
+  when: host is defined and item.vol_name is in volume_names
+  with_items: "{{host_vlun_facts.vluns}}"
+
+- name: Delete Volume
+  hpe3par_volume:
+    storage_system_ip: "{{ storage_system_ip }}"
+    storage_system_username: "{{ storage_system_username }}"
+    storage_system_password: "{{ storage_system_password }}"
+    state: absent
+    volume_name: "{{ item.vol_name }}"
+  run_once: true
+  when: item.vol_name is in volume_names
+  delegate_to: localhost
+  with_items: "{{ vluns }}"

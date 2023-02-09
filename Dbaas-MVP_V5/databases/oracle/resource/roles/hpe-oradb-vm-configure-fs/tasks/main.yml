@@ -1,0 +1,13 @@
+- name: VM fs mount_pt
+  set_fact:
+    data_fs_layout:
+      vgname: "{{vg_name}}"
+      state: present
+      filesystem:
+      - {mntp: "{{ mount_pt }}", lvname: "{{lv_name}}", lvsize: 100%FREE, fstype: ext4}
+      disk: "{{data_disks}}"
+
+- name: Host fs mount_pt # Helps in handling multiple mounts points in future road map.
+  set_fact:
+#    host_fs_layout: "{{host_fs_layout|default([]) + [data_fs_layout]}}"
+    host_fs_layout: "{{[data_fs_layout]}}"

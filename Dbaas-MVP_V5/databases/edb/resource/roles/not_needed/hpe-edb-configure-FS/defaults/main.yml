@@ -1,0 +1,12 @@
+base_pt: /u01
+
+# Storage FS layout for SI on FS
+fs_mount_points:
+  DATA:
+    - name: oradata
+      lun_size: "{{lun_size|int}}"
+      number_of_luns: "{{number_of_luns|int}}"
+  ARCH:
+    - name: oraarch
+      lun_size: "{{lun_size|int}}"
+      number_of_luns: "{{number_of_luns|int}}"

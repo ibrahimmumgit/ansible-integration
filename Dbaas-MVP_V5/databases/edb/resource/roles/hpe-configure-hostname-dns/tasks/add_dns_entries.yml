@@ -1,0 +1,22 @@
+- name: DNS update| Update forward lookup table for node IPs
+  local_action:
+    module: nsupdate
+    key_name: "{{TSIG_key_name}}"
+    key_secret: "{{TSIG_key_secret}}"
+    server: "{{dns_server}}"
+    zone: "{{forward_zone}}"
+    record: "{{ hostname }}"
+    value: "{{ ip_address }}"
+    ttl: 86400
+
+- name: DNS update| Update reverse lookup table for node IPs
+  local_action:
+    module: nsupdate
+    key_name: "{{TSIG_key_name}}"
+    key_secret: "{{TSIG_key_secret}}"
+    server: "{{dns_server}}"
+    zone: "{{reverse_zone}}"
+    record: "{{ip_address.split('.')[-1] + '.' + reverse_zone + '.'}}"
+    value: "{{fqdn + '.'}}"
+    ttl: 86400
+    type: "PTR"

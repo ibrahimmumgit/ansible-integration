@@ -1,0 +1,16 @@
+---
+- name: Get FC connectivity of hosts
+  set_fact:
+    fcWWNs_{{node_num}}: "{{ ansible_facts.fibre_channel_wwn }}"
+  delegate_to: localhost
+  delegate_facts: true
+
+- name: Get FC connectivity of hosts
+  set_fact:
+    fcWWNs: "{{ ansible_facts.fibre_channel_wwn }}"
+ 
+- fail:
+    msg: "Unable to find FC connections"
+  when: fcWWNs is not defined or (fcWWNs|length < 0)
+  delegate_to: localhost
+  delegate_facts: true

@@ -1,0 +1,4 @@
+oracle_user: oracle
+oracle_base: /u01/app/oracle
+oracle_home: "{{oracle_base}}/{{ ora_db_version }}/db1-base"
+oracle_sid: "{{ database_name }}"

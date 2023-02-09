@@ -1,0 +1,24 @@
+---
+- name: Install Chrony
+  become: yes
+  package:
+    name: 'chrony'
+    state: 'present'
+
+- name: Delete existing server entries
+  lineinfile:
+    path: /etc/chrony.conf
+    regexp: '^server '
+    state: absent
+
+- name: Add NTP server entry
+  lineinfile:
+    path: /etc/chrony.conf
+    line: "server {{chrony_server}} iburst"
+
+- name: Manage the chrony service
+  become: yes
+  service:
+    name: chronyd
+    enabled: yes
+    state: restarted

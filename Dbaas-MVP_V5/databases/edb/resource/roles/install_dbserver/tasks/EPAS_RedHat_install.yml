@@ -1,0 +1,34 @@
+---
+- name: Install python packages
+  package:
+    name:
+      - python-pip
+      - python-psycopg2
+      - python-ipaddress
+    state: present
+  when: os in ['RedHat7','CentOS7']
+  become: yes
+
+- name: Install python packages
+  package:
+    name:
+      - python3-pip
+      - python3-psycopg2
+    state: present
+  when: os in ['RedHat8','CentOS8']
+  become: yes
+  
+- name: Install EPAS packages
+  yum: 
+    name: "{{ item }}"
+  with_items:
+  - edb-as{{ edb_version }}-server*{{edb_sub_version}}*
+  - edb-as{{ edb_version }}-server-edb-modules*
+  when: pg_version!=10
+  
+- name: Install EPAS packages
+  yum: 
+    name: "{{ item }}"
+  with_items:
+  - edb-as{{ edb_version }}-server*{{edb_sub_version}}*
+  when: pg_version==10

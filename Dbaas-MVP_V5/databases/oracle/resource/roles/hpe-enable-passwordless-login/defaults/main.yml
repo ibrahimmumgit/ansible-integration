@@ -1,0 +1,5 @@
+---
+ssh_user: oracle
+public_key: ""
+ssh_dir: "/home/{{ssh_user}}/.ssh"
+authorized_keys_file: "{{ssh_dir}}/authorized_keys"

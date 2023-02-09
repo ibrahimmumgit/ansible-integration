@@ -1,0 +1,16 @@
+---
+
+pg_version: 13
+pg_instance_name: main
+barman_cli_package: "barman-cli-2.12-1"
+
+barman_pg_user: "barman"
+etc_hosts_lists: []
+
+pass_dir: "~/.edb"
+
+supported_os:
+  - CentOS7
+  - CentOS8
+  - RHEL7
+  - RHEL8

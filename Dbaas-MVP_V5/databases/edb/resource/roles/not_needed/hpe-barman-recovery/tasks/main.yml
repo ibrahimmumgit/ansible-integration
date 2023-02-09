@@ -1,0 +1,32 @@
+---
+
+- name: Find the backup_id 
+  shell: /usr/bin/barman list-backup {{ primary_vmname }}-{{ pg_instance_name }} | head -1 | awk '{ print $2 }'
+  become: true
+  become_user: barman
+  register: backup_id_1 
+  when: recovery_type == 'full'
+  
+- set_fact: 
+    full_backup_id: "{{ backup_id_1.stdout | regex_replace('\"','') }}"
+  when: recovery_type == 'full'
+    
+- name: Recover edb backup
+  command: /usr/bin/barman recover {{ primary_vmname }}-{{ pg_instance_name }} {{ full_backup_id }} {{ pg_data }} --remote-ssh-command "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{ pg_superuser }}@{{ primary_vmname }}"
+  #command: /usr/bin/barman recover dbpaedb-563506-edbclus1-5444 20211022T000005 /pg/edbvol1/edb/as13/edbclus1-5444/data --remote-ssh-command "ssh {{ pg_superuser }}@dbpaedb-563506"
+  become: true
+  become_user: barman
+  when: recovery_type == 'full'
+  
+- name: Recover edb backup using PITR
+  command: /usr/bin/barman recover {{ primary_vmname }}-{{ pg_instance_name }} {{ backup_id }} {{ pg_data }} --remote-ssh-command "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{ pg_superuser }}@{{ primary_vmname }}" --target-action promote --target-time "{{ recovery_time }}"
+  #command: /usr/bin/barman recover EDB-799393-main 20210906T202759 /pg01/edbvol1/edb/as12/data --remote-ssh-command "ssh enterprisedb@EDB-799393" --target-action promote --target-time "2021-09-07 22:22:57"
+  become: true
+  become_user: barman 
+  when: recovery_type == 'pitr'
+  
+- name: SNOW_fetch_facts
+  set_fact:  
+    pg_data: "{{ pg_data }}"
+    pg_port: "{{ port_number }}"
+    pg_instance_number: "{{ cluster_name }}"

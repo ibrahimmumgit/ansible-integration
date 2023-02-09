@@ -1,0 +1,60 @@
+---
+  - name: "Gather host ip address"
+    set_fact:
+      ip_address: "{{ ansible_facts.default_ipv4.address }}"
+    when: configure_cluster is not defined
+
+  - cohesity_source:
+      cluster: "{{ cohesity_cluster_ip }}"
+      username: "{{ cohesity_cluster_username }}"
+      password: "{{ cohesity_cluster_password }}"
+      state: present
+      environment: Physical
+      endpoint: "{{ ip_address }}"
+      validate_certs: False
+     
+  - name: Wait for 10 seconds to prepare for cohesity source
+    pause:
+       seconds: 10
+    when: configure_cluster is defined and configure_cluster is true
+
+  - cohesity_oracle_source:
+      cluster: "{{ cohesity_cluster_ip }}"
+      username: "{{ cohesity_cluster_username }}"
+      password: "{{ cohesity_cluster_password }}"
+      state: register
+      hostname: "{{ ip_address }}"
+    delegate_to: localhost
+
+  - set_fact:
+      jobName: "{{ service_name | default('jobName') }}"
+
+  - block:
+    - set_fact:
+        jobName: "{{ ansible_facts.hostname }}-{{ ip_address }}"
+
+    - set_fact:
+        jobName: "{{ oracle_cluster_name }}"
+      when: configure_cluster is defined and configure_cluster is true
+    when: service_name is not defined
+
+  - set_fact:
+       sleep_seconds: "{{ sleep_seconds * groups['orarac-flex'] | length }}"
+    when: configure_cluster is defined and configure_cluster is true
+
+  - name: "Wait for {{ sleep_seconds }} seconds to prepare for cohesity protection"
+    pause:
+       seconds: "{{ sleep_seconds }}"
+
+  - name: SNOW_fetch_facts 
+    cohesity_oracle_job:
+      cluster: "{{ cohesity_cluster_ip }}"
+      username: "{{ cohesity_cluster_username }}"
+      password: "{{ cohesity_cluster_password }}"
+      state: register
+      policyName: "{{ policyName }}"
+      viewName: "{{ viewName }}"
+      jobName: "{{ jobName }}"
+      timezone: "{{ timezone }}"
+      hostname: "{{ ip_address }}"
+    delegate_to: localhost

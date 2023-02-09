@@ -1,0 +1,28 @@
+  - fail:
+      msg: "Volume group or Logical volume is not present in config"
+    when: vg_name is not defined or lv_name is not defined
+
+  # TODO: Check vg_name from facts
+
+  - set_fact:
+      new_pvs: "{{ new_pvs | default([]) + [ item.key ] }}"
+    when: item.value.vg == vg_name
+    loop: "{{ ansible_facts.lvm.pvs | dict2items }}"
+
+  - debug: var=db_disks
+
+  - set_fact:
+      new_pvs: "{{ new_pvs + db_disks }}"
+    when: new_pvs is defined
+
+  - set_fact:
+      new_pvs: "{{ db_disks }}"
+    when: new_pvs is not defined
+
+  - debug: var=new_pvs
+
+  - name: filesystem | Create vg
+    lvg: vg={{ vg_name }} pvs={{ new_pvs }} state=present
+
+  - name: filesystem | create lv
+    lvol: vg={{ vg_name }} lv={{ lv_name }} size=100%PVS state=present shrink=no resizefs=true

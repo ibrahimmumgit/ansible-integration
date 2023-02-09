@@ -1,0 +1,5 @@
+oracle_user: oracle
+oracle_base: /u01/app/oracle
+oracle_home_si: "{{oracle_base}}/{{ ora_db_version }}/db1-base"
+oracle_home_gi: "/u01/app/{{ ora_db_version }}/grid"
+grid_install: false

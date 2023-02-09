@@ -1,0 +1,61 @@
+- name: 'Configure kernel parameters'
+  become: yes
+  template:
+    src: "sysctl.j2"
+    dest: /etc/sysctl.conf
+
+- name: Apply kernel parameters
+  shell: /sbin/sysctl -p
+
+- name: 'Configure limits parameters'
+  become: yes
+  template:
+    src: "limits.j2"
+    dest: /etc/security/limits.d/oracle-preinstall.conf
+
+# TODO: Check if we can have SELINUX enabled
+- name:  Disable selinux
+  lineinfile:
+    path: /etc/selinux/config
+    regexp: '^SELINUX='
+    line: 'SELINUX=disabled'
+
+# TODO: Identify the ports and open only those ports
+- name:  Stop firewalld
+  systemd:
+    name: firewalld
+    state: stopped
+
+- name:  Disable firewalld
+  systemd:
+    name: firewalld
+    enabled: no
+
+- name: reboot nodes
+  shell: sleep 2 && shutdown -r now "Ansible reboot"
+  async: 1
+  poll: 0
+  ignore_errors: true
+
+- name: wait for server to come back
+  local_action: wait_for
+  args:
+      host: "{{ inventory_hostname }}"
+      port: 22
+      state: started
+      delay: 10
+      timeout: 1800
+
+- pause: seconds=10
+
+- name: Configure NTP/chrony
+  include_tasks: configure_chrony.yml
+  when: configure_chrony
+
+- name: configure asm disk with udev rules
+  include_tasks: configure_asm_dg_data.yml
+  when: device_persistence is defined and device_persistence == 'udev'
+
+- debug:
+    var: asm_diskgroups
+  when: device_persistence is defined and device_persistence == 'udev'

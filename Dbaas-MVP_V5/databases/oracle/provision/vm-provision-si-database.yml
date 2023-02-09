@@ -1,0 +1,8 @@
+---
+- name: Provision oracle SI database on FS
+  import_playbook: ../resource/vm-provision-si-database.yml
+  when: storage_type|upper == "FS"
+
+- name: Provision oracle SI database on ASM
+  import_playbook: ../resource/vm-provision-si-database-asm.yml
+  when: storage_type|upper == "ASM"

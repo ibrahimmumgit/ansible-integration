@@ -1,0 +1,3 @@
+- name: EDB | Stop database
+  shell: systemctl stop edb-as-{{ pg_version }}-{{ pg_instance_name }}
+

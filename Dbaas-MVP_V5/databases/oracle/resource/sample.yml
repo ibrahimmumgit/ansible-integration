@@ -1,0 +1,46 @@
+---
+- name: sample script
+  hosts: localhost
+  vars:
+    oracle_asm_dg_redundancy: external
+    lun_size: 10
+    number_of_luns: 1  
+    asm_disk_groups:
+      ARCH:
+        - dg_name: ARCH
+          asm_redundancy: '{{oracle_asm_dg_redundancy}}'
+          lun_size: '{{lun_size|int}}'
+          number_of_luns: '{{number_of_luns|int}}'
+      DATA:
+        - dg_name: DATA
+          asm_redundancy: '{{oracle_asm_dg_redundancy}}'
+          lun_size: '{{lun_size|int}}'
+          number_of_luns: '{{number_of_luns|int}}'
+    asm_redundancy_vlun_map:
+      external: 1
+      normal: 2
+      high: 3
+  tasks:
+    - name: Configure ASM diskgroups data
+      set_fact:
+#      template:
+#        src: new_src.j2
+#        dest: /tmp/new_disk.txt
+        diskgroups: >
+          [
+          {% set unit_number = namespace(value=1) %}
+          {% for diskgroup in asm_disk_groups.keys()%}
+            {% for dg in asm_disk_groups[diskgroup] %}
+              {% set total_luns=asm_redundancy_vlun_map[dg.asm_redundancy|lower]|int * dg.number_of_luns|int %}
+              {% set disks = [] %}
+              {% for number in range(1,total_luns+1) %}
+                {{ disks.append({'name':'disk'+'_'+number|string, 'size':dg.lun_size, 'unit_number':unit_number.value })}}
+                {% set unit_number.value = unit_number.value + 1 %}
+              {% endfor%}
+              { "name": "{{dg.dg_name}}", "redundancy": "{{dg.asm_redundancy}}", 'disks':{{disks}}},
+            {% endfor %}
+          {% endfor %}
+          ]
+
+    - debug:
+        var: diskgroups

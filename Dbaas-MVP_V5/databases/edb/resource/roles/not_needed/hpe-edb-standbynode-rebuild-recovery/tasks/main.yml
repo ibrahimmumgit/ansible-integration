@@ -1,0 +1,98 @@
+---
+- set_fact:
+    db_type: "edb-as"
+  when: pg_type == 'EPAS'
+      
+- set_fact: 
+    db_type: "postgresql"
+  when: pg_type == 'PG' 
+    
+- name: EDB | Stop standby cluster  
+  shell: "{{ bin_path }}/pg_ctl stop -D {{ pg_data }}"
+  become: true
+  become_user: "{{ pg_superuser }}"
+  ignore_errors: True
+  when: "'standby' in {{group_names}}"
+  
+- name: Re-name data directory file
+  shell: rm -rf {{ pg_data }}.old
+  become: true
+  become_user: "{{ pg_superuser }}"
+  ignore_errors: True
+  when: "'standby' in {{group_names}}"
+  
+- name: Re-name data directory file
+  shell: mv {{ pg_data }} {{ pg_data }}.old
+  become: true
+  become_user: "{{ pg_superuser }}"
+  ignore_errors: True
+  when: "'standby' in {{group_names}}"
+   
+- name: Replication of edb backup from primary_node to standby_node
+  command: "{{ bin_path }}/pg_basebackup  -h {{ primary_db_ip }} -D {{ pg_data }} -U repuser -p {{ port_number}} -P -v -R -X stream -C -S {{ inventory_hostname | replace('[','') | replace(']','') | replace('-','_') }}"
+  become: true
+  become_user: "{{ pg_superuser }}"
+  when: "'standby' in {{group_names}}"
+    
+- name: Change the postgresql.auto.conf file
+  command: sed -i 's/restore_command/#restore_command/g' {{ pg_data }}/postgresql.auto.conf 
+  ignore_errors: True
+  when: "'standby' in {{group_names}}"
+
+- name: Change the postgresql.auto.conf file
+  command: sed -i 's/recovery_target_time/#recovery_target_time/g' {{ pg_data }}/postgresql.auto.conf 
+  ignore_errors: True
+  when: "'standby' in {{group_names}} and (recovery_type == 'pitr')"
+
+- name: Change the postgresql.auto.conf file
+  command: sed -i 's/recovery_target_action/#recovery_target_action/g' {{ pg_data }}/postgresql.auto.conf 
+  ignore_errors: True
+  when: "'standby' in {{group_names}} and (recovery_type == 'pitr')"  
+    
+- name: EDB | Start standby_node cluster
+  shell: "{{ bin_path }}/pg_ctl start -D {{ pg_data }}"
+  become: true
+  become_user: "{{ pg_superuser }}"
+  when: "'standby' in {{group_names}}"
+
+- pause:
+    minutes: 1
+      
+- name: EDB | Stop standby_node cluster
+  shell: "{{ bin_path }}/pg_ctl stop -D {{ pg_data }}"  
+  become: true
+  become_user: "{{ pg_superuser }}" 
+  when: "'standby' in {{group_names}}"
+  
+- name: EDB | Stop cluster on standby_node using service
+  shell: systemctl stop {{db_type}}-{{ pg_version }}-{{ pg_instance_name }}
+  async: 30
+  become: true
+  when: "'standby' in {{group_names}}"
+    
+- name: EDB | Start cluster on standby_node using service
+  shell: systemctl start {{db_type}}-{{ pg_version }}-{{ pg_instance_name }}
+  async: 30
+  become: true
+  when: "'standby' in {{group_names}}"
+    
+- name: Start EFM service post the recovery/upgrade completion on primary_node
+  shell: systemctl start edb-efm-{{ pg_instance_name }}-4.0
+  async: 30
+  become: true
+  when: "'primary' in {{group_names}}"
+    
+- name: Start EFM service post the recovery/upgrade completion on standby_nodes
+  shell: systemctl start edb-efm-{{ pg_instance_name }}-4.0
+  async: 30
+  become: true
+  when: "'standby' in {{group_names}}"
+
+- pause:
+    minutes: 1
+    
+- name: Restart EFM service post the recovery/upgrade completion on standby_nodes
+  shell: systemctl restart edb-efm-{{ pg_instance_name }}-4.0
+  async: 30
+  become: true
+  when: "'standby' in {{group_names}}"

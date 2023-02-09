@@ -1,0 +1,23 @@
+---
+# TODO: enhance this to have unique hostname
+- name: Generate hostname
+  set_fact:
+    hostname: "{{ tenant_name+'-'+lookup('password','/dev/null chars=digits length=6') }}"
+  when: vmname is not defined
+
+- name: Generate hostname
+  set_fact:
+    hostname: "{{vmname}}"
+  when: vmname is defined
+
+- name: Set FQDN
+  set_fact:
+    fqdn: "{{ hostname + '.' + domain_name }}"
+
+- name: SNOW_fetch_facts
+  set_fact:
+    FQDN: "{{ fqdn }}"
+
+- name:  Assign hostname
+  hostname:
+    name: "{{ fqdn }}"

@@ -1,0 +1,21 @@
+---
+- name: Look for available backups from barman_server 
+  command: 
+    cmd: "/usr/bin/barman list-backup {{ primary_vmname }}-{{ pg_instance_name }}"
+  delegate_to: "{{ _barman_server_public_ip }}"
+  become: true
+  become_user: barman 
+   
+- name: Clone edb backup using full_backup
+  command: /usr/bin/barman recover {{ primary_vmname }}-{{ pg_instance_name }} {{ backup_id }} {{ target_pg_data }} --remote-ssh-command "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{ pg_superuser }}@{{ target_ip }}" --target-immediate
+  # command: barman recover EDB-803557-port-5444 20210930T153222 {{ target_pg_data }} --remote-ssh-command "ssh enterprisedb@10.3.40.242"
+  become: true
+  become_user: barman  
+  when: "'barmanserver' in {{ group_names }} and ( recovery_type == 'full')"
+
+- name: Clone edb backup using PITR_backup
+  command: /usr/bin/barman recover {{ primary_vmname }}-{{ pg_instance_name }} {{ backup_id }} {{ target_pg_data }} --remote-ssh-command "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{ pg_superuser }}@{{ target_ip }}" --target-action promote --target-time "{{ recovery_time }}"
+  # command: barman recover EDB-803557-port-5444 20210930T153222 {{ target_pg_data }} --remote-ssh-command "ssh enterprisedb@10.3.40.242"
+  become: true
+  become_user: barman  
+  when: "'barmanserver' in {{ group_names }} and ( recovery_type == 'pitr')" 

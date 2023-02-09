@@ -1,0 +1,152 @@
+- name: check if GI has been configured
+  stat: path=/etc/oracle/olr.loc
+  register: olrloc
+
+- set_fact:
+    grid_install: True
+  when: olrloc.stat.exists
+
+- name: GI | Stopping database...
+  tags: never
+  shell: srvctl stop database -d "{{ database_name }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+  environment:
+    ORACLE_HOME: "{{ oracle_home_gi }}"
+    PATH: "{{ oracle_home_gi }}/bin"
+  when: grid_install
+  run_once: True
+  
+- name: GI | Stopping database...
+  shell: srvctl stop database -d "{{ database_name }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+  environment:
+    ORACLE_HOME: "{{ oracle_home }}"
+    PATH: "{{ oracle_home }}/bin"
+  when: grid_install
+  run_once: True  
+
+- name: SI | Stopping database...
+  shell: |
+              sqlplus -s / as sysdba << EOF
+              SHUTDOWN IMMEDIATE
+              EOF
+  become: true
+  become_user: "{{ oracle_user }}"
+  environment:
+    ORACLE_SID: "{{ oracle_sid }}"
+    ORACLE_BASE:  "{{ oracle_base }}"
+    ORACLE_HOME: "{{ oracle_home_si }}"
+    PATH: "{{ oracle_home_si }}/bin"
+  when: not grid_install
+
+- name: GI | Start database mount
+  shell: srvctl start database -d "{{ database_name }}" -o mount
+  become: true
+  become_user: "{{ oracle_user }}"
+  environment:
+    ORACLE_HOME: "{{ oracle_home }}"
+    PATH: "{{ oracle_home }}/bin"
+  when: grid_install
+  run_once: True
+  
+- name: GI | Start database mount
+  tags: never
+  shell: srvctl start database -d "{{ database_name }}" -o mount
+  become: true
+  become_user: "{{ oracle_user }}"
+  environment:
+    ORACLE_HOME: "{{ oracle_home_gi }}"
+    PATH: "{{ oracle_home_gi }}/bin"
+  when: grid_install
+  run_once: True  
+
+- name: SI | Start database mount
+  shell: |
+              sqlplus -s / as sysdba << EOF
+              STARTUP MOUNT
+              EOF
+  become: true
+  become_user: "{{ oracle_user }}"
+  environment:
+    ORACLE_SID: "{{ oracle_sid }}"
+    ORACLE_BASE:  "{{ oracle_base }}"
+    ORACLE_HOME: "{{ oracle_home_si }}"
+    PATH: "{{ oracle_home_si }}/bin"
+  when: not grid_install
+
+- name: GI | Enable archivelog
+  shell: |
+              sqlplus -s / as sysdba << EOF
+              alter database archivelog;
+              EOF
+  become: true
+  become_user: "{{ oracle_user }}"
+  environment:
+    ORACLE_SID: "{{ instance_info.instance_name }}"
+    ORACLE_BASE:  "{{ oracle_base }}"
+    ORACLE_HOME: "{{ oracle_home_si }}"
+    PATH: "{{ oracle_home_si }}/bin"
+  when: instance_info is defined
+  run_once: True
+
+- name: SI | Enable archivelog
+  shell: |
+              sqlplus -s / as sysdba << EOF
+              SHUTDOWN IMMEDIATE
+              startup mount;              
+              alter database archivelog;
+              alter database open;
+              EOF
+  become: true
+  become_user: "{{ oracle_user }}"
+  environment:
+    ORACLE_SID: "{{ database_name }}"
+    ORACLE_BASE:  "{{ oracle_base }}"
+    ORACLE_HOME: "{{ oracle_home_si }}"
+    PATH: "{{ oracle_home_si }}/bin"
+  when: instance_info is not defined
+  run_once: True
+
+- name: GI | Stopping database...
+  tags: never
+  shell: srvctl stop database -d "{{ database_name }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+  environment:
+    ORACLE_HOME: "{{ oracle_home_gi }}"
+    PATH: "{{ oracle_home_gi }}/bin"
+  when: grid_install
+  run_once: True
+
+- name: GI | Stopping database...
+  shell: srvctl stop database -d "{{ database_name }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+  environment:
+    ORACLE_HOME: "{{ oracle_home }}"
+    PATH: "{{ oracle_home }}/bin"
+  when: grid_install
+  run_once: True
+
+- name: GI | Starting database...
+  tags: never
+  shell: srvctl start database -d "{{ database_name }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+  environment:
+    ORACLE_HOME: "{{ oracle_home_gi }}"
+    PATH: "{{ oracle_home_gi }}/bin"
+  when: grid_install
+  run_once: True
+  
+- name: GI | Starting database...
+  shell: srvctl start database -d "{{ database_name }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+  environment:
+    ORACLE_HOME: "{{ oracle_home }}"
+    PATH: "{{ oracle_home }}/bin"
+  when: grid_install
+  run_once: True  

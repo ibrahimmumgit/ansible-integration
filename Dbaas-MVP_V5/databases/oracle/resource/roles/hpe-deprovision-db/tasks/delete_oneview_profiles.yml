@@ -1,0 +1,70 @@
+- set_fact:
+    server_hardwares_trim: "{{ server_hardwares_trim|default([]) + [ item.split(':')[0] ] }}"
+  with_items: "{{ server_hardware_names_full }}"
+- set_fact:
+    server_hardware_names: "{{ server_hardwares_trim }}"   
+
+- name: Gather facts about a Server Hardware by name
+  oneview_server_hardware_facts:
+    hostname: "{{ oneview_hostname }}"
+    username: "{{ oneview_username }}"
+    password: "{{ oneview_password }}"
+    api_version: "{{ api_version }}"
+    name: "{{ item }}"
+  delegate_to: localhost
+  loop: "{{ server_hardware_names }}"
+  register: server_hardware_facts
+
+- set_fact:
+    profile_uris: "{{ profile_uris|default([]) + [ item.ansible_facts.server_hardwares.serverProfileUri ] }}"
+  delegate_to: localhost
+  when: item.ansible_facts.server_hardwares.serverProfileUri
+  with_items: "{{ server_hardware_facts.results }}"
+
+- name: End the play
+  meta: end_play
+  when: profile_uris|length == 0
+
+- name: Power Off the server hardware
+  oneview_server_hardware:
+    hostname: "{{ oneview_hostname }}"
+    username: "{{ oneview_username }}"
+    password: "{{ oneview_password }}"
+    api_version: "{{ api_version }}"
+    state: power_state_set
+    data:
+        name : '{{ item }}'
+        powerStateData:
+            powerState: "Off"
+            powerControl: "PressAndHold"
+  run_once: true
+  delegate_to: localhost
+  with_items: "{{ server_hardware_names }}"
+
+- name: Delete the Server Profile
+  oneview_server_profile:
+    hostname: "{{ oneview_hostname }}"
+    username: "{{ oneview_username }}"
+    password: "{{ oneview_password }}"
+    api_version: "{{ api_version }}"
+    state: "absent"
+    data:
+      uri: "{{ item }}"
+  run_once: true
+  delegate_to: localhost
+  loop: "{{ profile_uris }}"
+
+- name: Finding server hardware type.
+  shell: echo "{{ server_hardware_names[0] }}" | cut -d' ' -f2
+  register: hardware_type
+  delegate_to: localhost
+
+- name: Setfact sdflex
+  set_fact:
+    sdflex: "{% if hardware_type.stdout == 'Npar' %}true{% else %}false{% endif %}"
+  delegate_to: localhost  
+    
+- name: Delete IP file
+  include_tasks: delete_sdflex_ips.yml
+  with_items: "{{ server_hardware_names }}"
+  when: sdflex

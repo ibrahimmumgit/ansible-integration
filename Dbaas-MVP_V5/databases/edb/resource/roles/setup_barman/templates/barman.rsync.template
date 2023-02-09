@@ -1,0 +1,13 @@
+[{{ inventory_hostname }}-{{ pg_instance_name }}]
+path_prefix = "{{ pg_bin_path }}"
+description =  "Instance: {{ pg_instance_name }} - {{ inventory_hostname }}"
+conninfo = host={{ pg_host }} user={{ barman_pg_user }} dbname=postgres port={{ pg_port }}
+ssh_command = ssh {{ pg_owner }}@{{ pg_host }}
+backup_method = rsync
+parallel_jobs = 1
+reuse_backup = link
+archiver = on
+backup_options = concurrent_backup
+immediate_checkpoint = true
+recovery_options = get-wal
+retention_policy = {{ edb_retention_policy }}

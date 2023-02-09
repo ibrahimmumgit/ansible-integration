@@ -1,0 +1,42 @@
+- name: make sure line 'dns=none' is set in /etc/NetworkManager/NetworkManager.conf
+  become: yes
+  ini_file:
+    path: /etc/NetworkManager/NetworkManager.conf
+    state: present
+    no_extra_spaces: yes
+    section: main
+    option: dns
+    value: none
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+
+- name: reload NetworkManager
+  become: yes
+  service:
+    name: NetworkManager
+    state: reloaded
+
+- name:  Add dns server entry in /etc/resolv.conf
+  lineinfile:
+    path: /etc/resolv.conf
+    insertafter: '^search'
+    line: "nameserver {{dns_server}}"
+
+- name:  Add search entry in /etc/resolv.conf
+  lineinfile:
+    path: /etc/resolv.conf
+    insertafter: '^search'
+    line: "search {{domain_name}}"
+
+- name: reload NetworkManager
+  service:
+    name: NetworkManager
+    state: reloaded
+
+- name: Public network | Configure /etc/hosts for node IPs
+  lineinfile:
+    path: /etc/hosts
+    line: "{{inventory_hostname+'  '+hostname+' '+fqdn}}"
+    create: yes

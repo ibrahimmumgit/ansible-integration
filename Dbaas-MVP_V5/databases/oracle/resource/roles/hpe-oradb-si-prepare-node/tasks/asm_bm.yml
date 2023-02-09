@@ -1,0 +1,45 @@
+- set_fact:
+    asm_data_disk_labels: []
+    asm_data_dg_disk_labels: []
+
+- set_fact:
+    disk_label_end_point: "{{ disk_label_start_point|int +dg.volume_wwns|length }}"
+
+- name: Create ASM disk labels
+  set_fact:
+    asm_data_disk_labels: "{{ asm_data_disk_labels + [asm_disk_label_prefix+item] }}"
+  with_sequence: start="{{disk_label_start_point}}" end="{{disk_label_end_point|int - 1}}"
+
+- set_fact:
+    disk_label_start_point: "{{ disk_label_end_point }}"
+
+- name: Configure udev rules for asm disks
+  lineinfile:
+    path: "{{udev_rules_file}}"
+    line: KERNEL=="dm-*",ENV{DM_UUID}=="mpath-3{{item.0|lower}}", SYMLINK+="{{item.1}}", OWNER="oracle",GROUP="oinstall",MODE="0660"
+    create: yes
+  with_together:
+  - "{{dg.volume_wwns}}"
+  - "{{ asm_data_disk_labels }}"
+
+- set_fact:
+    asm_data_dg_disk_labels: "{{ asm_data_dg_disk_labels + [ {'device': 'dm', 'asmlabel': item.split('/')[-1]} ]  }}"
+  with_items: "{{asm_data_disk_labels}}"
+
+- set_fact:
+    asm_data_diskgroup: >
+          {
+            "diskgroup": "{{dg.name}}",
+            "state": "present",
+            "properties": [
+              {
+                "redundancy": "{{ dg.redundancy }}",
+                "ausize": 4
+              }
+            ],
+            "attributes": [],
+            "disk": {{asm_data_dg_disk_labels}}
+          }
+
+- set_fact:
+    asm_diskgroups: "{{ asm_diskgroups|default([]) + [ asm_data_diskgroup ] }}"

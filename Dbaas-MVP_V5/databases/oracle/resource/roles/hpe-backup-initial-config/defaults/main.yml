@@ -1,0 +1,9 @@
+cohesity_cluster_ip: "10.3.40.34"
+cohesity_cluster_username: "admin"
+cohesity_cluster_password: "P@ssw0rd123"
+
+policyName: 'HPE Backup Policy - 2m'
+viewName: "DefaultStorageDomain"
+timezone: "Asia/Kolkata"
+
+sleep_seconds: 30

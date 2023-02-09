@@ -1,0 +1,11 @@
+server_hardware_names: ['SGH817YECA, bay 3']
+delete_volume_flag: true
+action: delete_all
+host_names: []
+profile_uris: []
+profile_names: []
+vm_uuid: "4231d401-589a-3b0a-dd3c-0a89b51e5b0a" #fecthedfrom"vm_facts.instance.hw_product_uuid"
+deprovision: "baremetal"
+delete_profiles: true
+clear_storage: true
+ip_path: "/opt/dbaas/sdflex"

@@ -1,0 +1,3 @@
+configure_cluster: false
+host_group_name: "{% if configure_cluster %}orarac-flex{%else%}bmnewgroup{%endif%}"
+node_ips: []

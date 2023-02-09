@@ -1,0 +1,19 @@
+- name: Extend DATA volume
+  when: data_vg_name and data_lv_name
+  block:
+  - name: Get existing DATA PVS
+    set_fact:
+      data_pvs: "{{ data_pvs | default([]) + [ item.key ] }}"
+    when: item.value.vg == data_vg_name
+    loop: "{{ ansible_facts.lvm.pvs | dict2items }}"
+
+  - name: Add new DATA PVS
+    set_fact:
+      data_pvs: "{{ data_pvs + [ item.device ] }}"
+    with_items: "{{data_disks}}"
+
+  - name: filesystem | Update vg
+    lvg: vg={{ data_vg_name }} pvs={{ data_pvs }} state=present
+
+  - name: filesystem | Update lv
+    lvol: vg={{ data_vg_name }} lv={{ data_lv_name }} size=100%PVS state=present shrink=no resizefs=true

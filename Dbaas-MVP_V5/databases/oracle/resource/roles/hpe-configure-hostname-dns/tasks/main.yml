@@ -1,0 +1,12 @@
+---
+- include_tasks: update_hosts.yml
+
+- include_tasks: assign_hostname.yml
+  when: assign_hostname
+
+- include_tasks: update_resolv.yml
+  when: update_resolv_conf
+
+- include_tasks: add_dns_entries.yml
+  when: update_dns_entries
+

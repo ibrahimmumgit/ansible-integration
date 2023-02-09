@@ -1,0 +1,16 @@
+#!/bin/bash
+echo "Database Restore is going on "
+logfile=orcl__rman_restore_`date +"%m%d%Y"_"%H%M%S"`.log
+rman log=$logfile<<EOF
+
+connect target /
+shutdown immediate;
+startup mount;
+run{
+set until time "to_date('01-AUG-2020 17:35:05','DD-MON-YYYY HH24:MI:SS')";
+RESTORE DATABASE;
+RECOVER DATABASE;
+alter database open resetlogs;
+}
+exit;
+EOF

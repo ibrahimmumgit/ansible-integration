@@ -1,0 +1,7 @@
+- name: Delete oneview server profiles
+  include_tasks: delete_oneview_profiles.yml
+  when: delete_profiles
+
+- name: Cleanup storage
+  include_tasks: cleanup_storage.yml
+  when: clear_storage

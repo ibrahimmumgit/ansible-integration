@@ -1,0 +1,41 @@
+update_dns_entries: true
+add_nameserver_to_resolv: true
+configure_priv_network: true
+rac_group_name: orarac-flex
+rac_hub_group_name: orarac-flex-hub
+
+diskgroup_name: "{{ oracle_asm_init_dg }}"
+configure_cluster: false
+
+asm_disk_label_prefix: "asm/asm-disk"
+
+hostname_prefix: oradb-
+
+configure_chrony: true
+chrony_server: ntp.hpecorp.net
+
+udev_rules_file: /etc/udev/rules.d/99-asm.rules
+
+# Storage ASM layout for SI ASM database
+asm_disk_groups:
+  DATA:
+    - dg_name: DATA
+      asm_redundancy: "{{oracle_asm_dg_redundancy}}"
+      lun_size: "{{lun_size|int}}"
+      number_of_luns: "{{number_of_luns|int}}"
+  ARCH:
+    - dg_name: ARCH
+      asm_redundancy: "{{oracle_asm_dg_redundancy}}"
+      lun_size: "{{lun_size|int}}"
+      number_of_luns: "{{number_of_luns|int}}"
+
+# Storage FS layout for SI on FS
+fs_mount_points:
+  DATA:
+    - name: oradata
+      lun_size: "{{lun_size|int}}"
+      number_of_luns: "{{number_of_luns|int}}"
+  ARCH:
+    - name: oraarch
+      lun_size: "{{lun_size|int}}"
+      number_of_luns: "{{number_of_luns|int}}"

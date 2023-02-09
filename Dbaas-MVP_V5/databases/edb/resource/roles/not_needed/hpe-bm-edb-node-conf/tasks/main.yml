@@ -1,0 +1,13 @@
+---
+- set_fact:
+    node_ips: "{{ node_ips|default([]) + [db_machine_ip] }}"
+  when: db_machine_ip is defined
+
+- name: Add host to group "{{host_group_name}}"
+  add_host:
+    name: "{{ item }}"
+    groups: "{{host_group_name}}"
+    node_num: "node{{ my_index + 1 }}"
+  loop: "{{ node_ips }}"
+  loop_control:
+    index_var: my_index

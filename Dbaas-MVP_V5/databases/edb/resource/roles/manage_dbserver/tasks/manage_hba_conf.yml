@@ -1,0 +1,96 @@
+---
+- name: Find the hba file location when EPAS
+  ignore_errors: yes
+  community.postgresql.postgresql_query:
+    login_user: "{{ pg_owner }}"
+    port: "{{ pg_port }}"
+    login_unix_socket: "{{ pg_unix_socket_directories[0] }}"
+    query: "show hba_file;"
+    db: "{{ pg_database }}"
+  when: "(pg_hba_ip_addresses|length > 0 ) and (pg_type == 'EPAS')"
+  become: yes
+  become_user: "{{ pg_owner }}"
+  no_log: "{{ disable_logging }}"
+  register: hba_info
+  
+- name: Find the hba file location when PG  
+  ignore_errors: yes
+  community.postgresql.postgresql_query:
+    login_user: "{{ pg_owner }}"
+    port: "{{ pg_port }}"
+    login_unix_socket: "{{ pg_unix_socket_directories[0] }}"
+    query: "show hba_file;"
+    db: "{{ pg_database }}"
+  when: "(pg_hba_ip_addresses|length > 0 ) and (pg_type == 'PG')"
+  become: yes
+  become_user: "{{ pg_owner }}"
+  no_log: "{{ disable_logging }}"
+  register: hba_pg_info  
+
+- debug:
+    msg: "{{ pg_hba_ip_addresses }}"
+
+- name: Manage ip address entries into pg_hba file when EPAS_type
+  ignore_errors: yes
+  community.postgresql.postgresql_pg_hba:
+    dest: "{{ hba_info.query_result[0].hba_file }}"
+    contype: "{{ line_item.contype | default('hostssl') }}"
+    users: "{{ line_item.users | default ('all') }}"
+    source: "{{ line_item.source }}"
+    databases: "{{ line_item.databases | default('all') }}"
+    method: "{{ line_item.method | default('scram-sha-256') }}"
+    state: "{{ line_item.state | default('present') }}"
+    create: true
+  become: yes
+  become_user: "{{ pg_owner }}"
+  when: "(pg_hba_ip_addresses|length > 0 ) and (pg_type == 'EPAS')"
+  with_items: "{{ pg_hba_ip_addresses }}"
+  loop_control:
+      loop_var: line_item
+  no_log: "{{ disable_logging }}"
+  register: hba_update  
+  
+- name: Manage ip address entries into pg_hba file when PG_type
+  ignore_errors: yes
+  community.postgresql.postgresql_pg_hba:
+    dest: "{{ hba_pg_info.query_result[0].hba_file }}"
+    contype: "{{ line_item.contype | default('hostssl') }}"
+    users: "{{ line_item.users | default ('all') }}"
+    source: "{{ line_item.source }}"
+    databases: "{{ line_item.databases | default('all') }}"
+    method: "{{ line_item.method | default('scram-sha-256') }}"
+    state: "{{ line_item.state | default('present') }}"
+    create: true  
+  become: yes
+  become_user: root
+  become_method: sudo
+  when: "(pg_hba_ip_addresses|length > 0 ) and (pg_type == 'PG')"
+  with_items: "{{ pg_hba_ip_addresses }}"
+  loop_control:
+      loop_var: line_item
+  no_log: "{{ disable_logging }}"
+  register: hba_status
+   
+- name: Reload the pg service when EPAS_type
+  ignore_errors: yes
+  systemd:
+    name: "{{ pg_service }}"
+    daemon_reload: yes
+    state: reloaded
+  become: yes
+  no_log: "{{ disable_logging }}"
+  when: 
+    - "hba_update.changed"
+    - "pg_type == 'EPAS'"
+
+- name: Reload the pg service when PG_type
+  ignore_errors: yes
+  systemd:
+    name: "{{ pg_service }}"
+    daemon_reload: yes
+    state: reloaded
+  become: yes
+  no_log: "{{ disable_logging }}"
+  when:
+    - "hba_status.changed"
+    - "pg_type == 'PG'"

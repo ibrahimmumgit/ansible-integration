@@ -1,0 +1,6 @@
+---
+oracle_cluster_name: racdb
+nodes: 2
+scan_ips: 3
+pool_file_dir: /opt/dbaas
+ip_pool_file: "{{pool_file_dir}}/ip_pool.json"

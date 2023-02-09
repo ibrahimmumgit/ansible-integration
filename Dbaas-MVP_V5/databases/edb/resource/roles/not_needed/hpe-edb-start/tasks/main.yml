@@ -1,0 +1,2 @@
+- name: EDB | Start database
+  shell: systemctl start edb-as-{{ pg_version }}-{{ pg_instance_name }}

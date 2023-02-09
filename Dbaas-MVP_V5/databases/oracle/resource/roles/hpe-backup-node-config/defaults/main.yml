@@ -1,0 +1,2 @@
+use_proxy: "no"
+cohesity_agent_repo_file: "http://10.3.40.31/cohesity/el-cohesity-agent-6.5.1a-1.x86_64.rpm"

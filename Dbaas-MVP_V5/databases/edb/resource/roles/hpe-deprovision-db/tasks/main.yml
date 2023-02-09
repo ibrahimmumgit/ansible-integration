@@ -1,0 +1,9 @@
+---
+- include_tasks: deprovision_vm.yml
+  when: deprovision == "vm"
+
+- include_tasks: deprovision_baremetal.yml
+  when: deprovision == "baremetal"
+
+- include_tasks: rollback_storage.yml
+  when: deprovision == "rollback_storage"

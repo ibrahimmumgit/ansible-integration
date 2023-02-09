@@ -1,0 +1,11 @@
+---
+- block:
+  - name: Get newest repo-file of Cohesity agent
+    get_url: dest=/tmp/cohesity-agent.rpm  url={{ cohesity_agent_repo_file }} use_proxy={{ use_proxy }} validate_certs=no
+
+  - name: Install package
+    yum:
+      name: /tmp/cohesity-agent.rpm
+      state: present
+
+  when: backup_mode|lower == "cohesity"

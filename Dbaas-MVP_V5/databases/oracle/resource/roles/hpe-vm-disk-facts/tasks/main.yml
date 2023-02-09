@@ -1,0 +1,20 @@
+- name: Gather disk facts from virtual machine using UUID
+  vmware_guest_disk_info:
+    hostname: "{{ vcenter_ip }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    datacenter: "{{datacenter_name}}"
+    validate_certs: no
+    uuid: "{{uuid}}"
+  register: disk_facts
+
+- name: List the unit numbers
+  set_fact:
+    unit_numbers: "{{unit_numbers|default([]) + [item.value.unit_number| int] }}"
+  with_items: "{{ disk_facts.guest_disk_info|dict2items }}"
+
+- set_fact:
+    unit_number: "{{ unit_numbers | max }} "
+
+- set_fact:
+    new_unit_numbers: []

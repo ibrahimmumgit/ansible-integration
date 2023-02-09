@@ -1,0 +1,124 @@
+- name: Create Host "{{ item.name }}"
+  hpe3par_host:
+    storage_system_ip: "{{ storage_system_ip }}"
+    storage_system_username: "{{ storage_system_username }}"
+    storage_system_password: "{{ storage_system_password }}"
+    state: present
+    host_name: "{{ item.name }}"
+    host_fc_wwns: "{{ item.wwpns }}"
+  loop: "{{ host_wwpns_map }}"
+  when: host_wwpns_map is defined
+
+- name: Create volumes
+  when: not configure_cluster_new_node
+  block:
+  - include_tasks: categories_volumes.yml
+
+  - fail:
+      msg: "No volumes to be created"
+    when: volumes|length == 0
+
+- when: not configure_cluster_new_node
+  block:
+  - name: Create Volume "{{ item.name }}"
+    hpe3par_volume:
+      storage_system_ip: "{{ storage_system_ip }}"
+      storage_system_username: "{{ storage_system_username }}"
+      storage_system_password: "{{ storage_system_password }}"
+      state: present
+      volume_name: "{{ item.name }}"
+      cpg: "{{ cpg }}"
+      size: "{{ item.size }}"
+      size_unit: "{{ size_unit }}"
+    with_items: "{{volumes}}"
+
+  - include_tasks: get_dg_volume_wwns.yml
+
+- when: configure_cluster
+  block:
+  - set_fact:
+      hostsetName: "RAC-{{ oracle_cluster_name }}-hostset"
+
+  - name: Create hostset "{{hostsetName}}"
+    hpe3par_hostset:
+      storage_system_ip: "{{ storage_system_ip }}"
+      storage_system_username: "{{ storage_system_username }}"
+      storage_system_password: "{{ storage_system_password }}"
+      state: present
+      hostset_name: "{{hostsetName}}"
+
+  - name: Get Storage hostnames
+    set_fact:
+      storage_hostnames: "{{ host_wwpns_map  | map(attribute='name') | list }}"
+    when: host_wwpns_map is defined
+
+  - name: Add members to hostset "{{hostsetName}}"
+    hpe3par_hostset:
+      storage_system_ip: "{{ storage_system_ip }}"
+      storage_system_username: "{{ storage_system_username }}"
+      storage_system_password: "{{ storage_system_password }}"
+      state: add_hosts
+      hostset_name: "{{hostsetName}}"
+      setmembers: "{{ storage_hostnames }}"
+    when: storage_hostnames is defined
+
+  - name: Create VLUN for RAC/Hostset
+    hpe3par_vlun:
+      storage_system_ip: "{{ storage_system_ip }}"
+      storage_system_username: "{{ storage_system_username }}"
+      storage_system_password: "{{ storage_system_password }}"
+      state: export_volume_to_hostset
+      volume_name: "{{ item.name }}"
+      host_set_name:  "{{hostsetName}}"
+      autolun: "{{ autolun }}"
+    when: skiplun is not defined or not skiplun
+    with_items: "{{ volumes }}"
+
+- name: Configure storage for RAC database scale-out
+  when: configure_cluster_new_node
+  block:
+  - set_fact:
+      hostsetName: "RAC-{{ oracle_cluster_name }}-hostset"
+
+  - name: Get Storage hostnames
+    set_fact:
+      storage_hostnames: "{{ host_wwpns_map  | map(attribute='name') | list }}"
+    when: host_wwpns_map is defined
+
+  - name: Add members to hostset "{{hostsetName}}"
+    hpe3par_hostset:
+      storage_system_ip: "{{ storage_system_ip }}"
+      storage_system_username: "{{ storage_system_username }}"
+      storage_system_password: "{{ storage_system_password }}"
+      state: add_hosts
+      hostset_name: "{{hostsetName}}"
+      setmembers: "{{ storage_hostnames }}"
+    when: storage_hostnames is defined
+    
+- set_fact:
+    total_luns: "{{nodes * luns }}"    
+    
+- set_fact: 
+     volumes_main_list: "{{volumes_main_list|default([]) + [volumes[item].name] }}"
+  loop: "{{ range(0,total_luns|int)|list }}"
+  
+- set_fact:
+    volumes_main: "{{volumes_main_list}}"
+
+- name: creating vlun mapping
+#  tags: never
+  include_tasks: vlun_mapping.yml
+  loop: "{{ host_wwpns_map }}"
+  loop_control:
+    index_var: my_idx
+   
+- name: Adding db vm to inventory
+#  tags: never
+  add_host:
+    hostname: "{{ item }}"
+    volumes: "{{volume_wwns_main[(my_idx*luns):((my_idx*luns)+luns)]}}"
+    groups: "{{host_group_name}}"
+    volume_wwns_main: "{{volume_wwns_main}}"
+  loop: "{{groups[host_group_name]}}"  
+  loop_control:
+    index_var: my_idx

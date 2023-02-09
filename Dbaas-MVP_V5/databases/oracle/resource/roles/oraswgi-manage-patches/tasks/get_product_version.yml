@@ -1,0 +1,67 @@
+- name: Check pmon process
+  shell: "ps -ef | grep ora_pmon | grep -v grep | awk '{print $8}' | cut -d '_' -f3 | grep {{ database_name }}"
+  register: instance_name_std
+  when: grid_install == true
+
+- set_fact:
+    oracle_sid: '{{ instance_name_std.stdout }}'
+  when: grid_install == true
+
+- name: Get instance running
+  shell:  ps -ef | grep "ora_pmon_{{ oracle_sid }}" |grep -v grep | sed 's/^.*pmon_//g'
+  # with_items: "{{oracle_sid}}"
+  register: dbs
+  changed_when: False
+
+- debug: msg="{{ oracle_home }}/bin"
+
+- name: Get patch update and version
+  shell: |
+              sqlplus -s / as sysdba << EOF
+              select version from PRODUCT_COMPONENT_VERSION where PRODUCT like 'Oracle Data%';
+              exit
+              EOF
+  become: true
+  become_user: "{{ oracle_user }}"
+  changed_when: True
+  environment:
+    ORACLE_SID: "{{ dbs.stdout }}"
+    ORACLE_BASE:  "{{ oracle_base }}"
+    ORACLE_HOME: "{{ oracle_home }}"
+    PATH: "{{ oracle_home }}/bin"
+  register: dbhome_product_version_output
+  when: ora_db_version == "12.2.0.1"
+  
+- name: Collect product_version 
+  set_fact:
+    product_version: "{{ item }}"
+  when: item is regex("\d+.+\d+.+\d+.+\d")
+  with_items: "{{ dbhome_product_version_output.stdout_lines }}"
+  when: ora_db_version == "12.2.0.1"
+  
+- name: Get patch update and version
+  shell: |
+              sqlplus -s / as sysdba << EOF
+              select VERSION_FULL from product_component_version;
+              exit
+              EOF
+  become: true
+  become_user: "{{ oracle_user }}"
+  changed_when: True
+  environment:
+    ORACLE_SID: "{{ dbs.stdout }}"
+    ORACLE_BASE:  "{{ oracle_base }}"
+    ORACLE_HOME: "{{ oracle_home }}"
+    PATH: "{{ oracle_home }}/bin"
+  register: dbhome_product_version_output
+  when: ora_db_version != "12.2.0.1"
+  
+- name: Collect product_version 
+  set_fact:
+    product_version: "{{ item }}"
+  when: item is regex("\d+.+\d+.+\d+.+\d")
+  with_items: "{{ dbhome_product_version_output.stdout_lines }}"
+  when: ora_db_version != "12.2.0.1"
+
+- debug:
+    msg: "product version -> {{ product_version }}"

@@ -1,0 +1,28 @@
+- name: Public network | Configure /etc/hosts for node IPs
+  lineinfile:
+    path: /etc/hosts
+    line: "{{inventory_hostname+'  '+ansible_hostname+' '+ansible_fqdn}}"
+    create: yes
+
+- name: DNS update| Update forward lookup table for node IPs
+  local_action:
+    module: nsupdate
+    key_name: "{{TSIG_key_name}}"
+    key_secret: "{{TSIG_key_secret}}"
+    server: "{{dns_server}}"
+    zone: "{{forward_zone}}"
+    record: "{{ansible_hostname}}"
+    value: "{{inventory_hostname}}"
+    ttl: 86400
+
+- name: DNS update| Update reverse lookup table for node IPs
+  local_action:
+    module: nsupdate
+    key_name: "{{TSIG_key_name}}"
+    key_secret: "{{TSIG_key_secret}}"
+    server: "{{dns_server}}"
+    zone: "{{reverse_zone}}"
+    record: "{{inventory_hostname.split('.')[-1] + '.' + reverse_zone + '.'}}"
+    value: "{{ansible_fqdn + '.'}}"
+    ttl: 86400
+    type: "PTR"

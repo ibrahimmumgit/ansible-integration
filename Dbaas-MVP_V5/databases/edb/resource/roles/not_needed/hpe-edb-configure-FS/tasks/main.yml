@@ -1,0 +1,90 @@
+- name: Install common packages OL/RHEL
+  yum:
+    name: "{{ item }}"
+    state: installed
+  with_items:
+  - device-mapper-multipath
+  - sg3_utils
+  when: ansible_os_family == 'RedHat'
+
+- name: get disk name
+  shell: mpathconf --enable
+
+- name:  Start multipathd
+  systemd:
+    name: multipathd
+    state: started
+
+- name:  enabled multipathd
+  systemd:
+    name: multipathd
+    enabled: yes
+
+- name: scan disks
+  shell: /usr/bin/rescan-scsi-bus.sh
+
+- name: scan disks
+  shell: multipath -F
+  ignore_errors: yes
+
+- name: scan disks
+  shell: multipath -r && multipath -ll
+  ignore_errors: yes
+
+- set_fact:
+    data_mnts: >
+            [
+            {% for pt in fs_mount_points['DATA']%}
+              "{{pt.name}}",
+            {% endfor %}
+            ]
+
+- name: get DATA disk names
+  shell: ls -la /dev/disk/by-id/ | grep -i "{{volumes[item]}}" |  cut -f3  -d"/" | head -1
+  loop: "{{ range(0,luns|int)|list }}"
+  register: data_disk_sub_levels
+
+- debug:
+    var: data_disk_sub_levels    
+
+- name: for DATA fs disk list
+  set_fact:
+    data_disks: "{{data_disks|default([]) + [{ 'device': '/dev/'+item.stdout, 'pvname': '/dev/'+item.stdout }]}}"
+  with_items: "{{data_disk_sub_levels.results}}"  
+
+- set_fact:
+    data_mnt_name: "{{data_mnts[0]}}"
+    data_mnt_fs: "{{base_pt}}/{{data_mnts[0]}}"
+    data_vg_name: "VG_{{data_mnts[0]}}"
+    data_lv_name: "LV_{{data_mnts[0]}}"
+
+- name: DATA fs mount_pt
+  set_fact:
+    data_fs_layout:
+      vgname: "{{data_vg_name}}"
+      state: present
+      filesystem:
+      - {mntp: "{{data_mnt_fs}}", lvname: "{{data_lv_name}}", lvsize: 100%FREE, fstype: ext4}
+      disk: "{{data_disks}}"
+
+- name: Initiate host_fs_layout
+  set_fact:
+    host_fs_layout: []
+
+- name: Host FS layouts
+  set_fact:
+    host_fs_layout: "{{host_fs_layout|default([]) + [data_fs_layout]}}"
+
+- debug:
+    var: host_fs_layout
+
+- name: Set DATA mount_pt
+  set_fact:
+    datafile_dest: "{{data_mnt_fs}}"
+    configure_host_disks: true
+
+- debug:
+    var:  datafile_dest
+
+- debug:
+    var:  recoveryfile_dest

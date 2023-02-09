@@ -1,0 +1,89 @@
+---
+
+- name: Set variables
+  set_fact:
+    os: "{{ ansible_distribution | replace('RedHat', 'RHEL') }}{{ ansible_distribution_major_version }}"
+    pem_server_exists: false
+
+- name: Reference variables
+  include_vars: "{{ pg_type }}.yml"
+
+- name: Check support for Operating System
+  fail:
+    msg: "Operating System = {{ os }} not supported."
+  when: os not in supported_os
+
+- name: Check supported versions for Database engine
+  fail:
+    msg: "Database Engine Version = {{ pg_version }} not supported.
+          Supported versions are {{ supported_pg_version }}"
+  when: pg_version|int not in supported_pg_version
+
+- name: Set the node_hostvars variable
+  set_fact:
+    node_hostvars: "{{ hostvars[inventory_hostname] }}"
+
+- name: Get PEM server informations
+  set_fact:
+    pem_server_info: "{{ lookup('edb_devops.edb_postgres.pem_server', wantlist=True) }}"
+
+- name: Set pem_server_exists
+  set_fact:
+    pem_server_exists: true
+  when:
+    - pem_server_info|length > 0
+
+- name: Remove pem agent based on force_pemserver/force_initdb/force_pemagent
+  block:
+    - import_tasks: rm_pemagent.yml
+  when: >
+      ((force_pemserver is defined and force_pemserver)
+       or (force_initdb is defined and force_initdb)
+       or (force_pemagent is defined and force_pemagent))
+  become: yes
+
+- name: Fetch PEM admin user password
+  import_tasks: pem_agent_fetch_adm_password.yml
+  when: pem_server_exists
+
+- name: Create pemagent user on primary
+  import_tasks: pem_agent_user.yml
+  when: group_names | select('search','primary') | list | count > 0
+
+- name: Update /etc/hosts based on use_hostname
+  block:
+    - import_tasks: linux_update_etc_hosts.yml
+  become: yes
+  when:
+    - use_hostname
+
+- name: Configure pemagent and pemserver HBA
+  block:
+    - import_tasks: pem_agent_hba.yml
+  become: yes
+  # We limit the number of worker for this task to avoid any concurrency issue
+  # while updating PEM server HBA file.
+  throttle: 2
+
+- name: Install and configure pemagent on nodes
+  block:
+    - import_tasks: pem_agent_install.yml
+    - import_tasks: pem_agent_config.yml
+  become: yes
+
+- name: Register database on primary and standby
+  block:
+    - import_tasks: pem_agent_register_db.yml
+  when: >
+    group_names | select('search','primary') | list | count > 0
+    or
+    group_names | select('search','standby') | list | count > 0
+    or
+    force_register_db
+  become: yes
+
+- name: Reset the variables
+  set_fact:
+    pem_server_info:
+    node_hostvars:
+    pem_server_exists: false

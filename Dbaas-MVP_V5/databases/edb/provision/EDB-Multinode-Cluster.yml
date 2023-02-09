@@ -1,0 +1,8 @@
+---
+- name: Oracle managae patch for non GI install (opatch)
+  import_playbook: ../resource/BM-EDB-multinode-cluster.yml
+  when: provision=="baremetal"
+
+- name: Oracle managae patch for non GI install (opatchauto)
+  import_playbook: ../resource/VM-EDB-multinode-cluster.yml
+  when: provision=="vm"

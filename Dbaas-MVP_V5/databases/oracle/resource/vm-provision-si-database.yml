@@ -1,0 +1,356 @@
+---
+- name: Create a VM from a template
+  hosts: localhost
+  vars:
+  - vcenter_ip: "10.3.40.100"
+  - vcenter_username: "administrator@vsphere.local"
+  - vcenter_password: "P@ssw0rd123"
+  - vm_name : "Oracle18cdemo_rishi1"
+  - template_name : CentOS_Oracle18c_Template
+  - datacenter_name  : DBaaS_Datacenter
+  - folder_name : "/vm/"
+  - oracle_release : "Database 18c Enterprise Edition"
+  - ora_db_version : "18.3.0.0"
+  - pdb_name : ""
+  - db_type : "NON-CDB"
+  - db_name : "orclm"
+  - new_db_name : "orclm" ##WE are setting it as we are not running from SNOW
+  - database_passwd : "*****"
+  - cpu: 4
+  - memory: 8192
+  - vm_network: "VM Network"
+  - datastore: DBaaSMgmt_DS2
+  - ssh_user: "root"
+  - ssh_pass: "P@ssw0rd123"
+  - db_size: "30"
+  - disk_number: 1
+  - tenant_name: hpedbaas
+  - dict_list: { cpu: "{{ cpu }}", memory: "{{ memory}}", db_size: "{{ db_size}}", disk_number: "{{ disk_number }}" }
+  - template_dict:
+     centos78: {12.2.0.1: orcl12_db_template, 18.3.0.0: orcl18_db_template, 19.3.0.0: orcl19_db_template }
+     redhat78: {12.2.0.1: orcl12_db_template, 18.3.0.0: orcl18_db_template, 19.3.0.0: orcl19_db_template }
+  - ansible_python_interpreter: /usr/bin/python3
+  - rollback: true
+  tasks:
+  - name: Validate input parameters.
+    include_role:
+      name: hpe-validate-params
+    vars:
+      type: int
+
+  - name: VM template
+    set_fact:
+      template_name: "{{item.value}}"
+    when: item.key == ora_db_version
+    with_dict: "{{ template_dict[operating_system] }}"
+
+  - block:
+    - name: Generate random sequence
+      set_fact:
+        vmname: "{{tenant_name}}-{{lookup('password','/dev/null chars=digits length=6')}}"
+
+    - name: Clone the template
+      vmware_guest:
+        hostname: "{{ vcenter_ip }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: False
+        name: "{{ vmname }}"
+        template: "{{ template_name }}"
+        datacenter: "{{ datacenter_name }}"
+        cluster: "{{vmware_cluster_name}}"
+        folder: "{{ folder_name }}"
+        state: poweredon
+        hardware:
+          num_cpus: "{{ cpu | int }}"
+          hotadd_cpu: True
+          hotadd_memory: True
+          hotremove_cpu: True
+#          hotremove_memory: True
+          memory_mb: "{{ memory | int }}"
+        networks:
+        - name: "{{ vm_network }}"
+        datastore: "{{ datastore }}"
+        wait_for_ip_address: yes
+      register: vm_details
+
+    - name: SNOW_fetch_facts
+      set_fact:
+          vmname: "{{vmname}}"
+          vm_fqdn: "{{vmname + '.' + domain_name }}"
+          db_machine_ip: "{{ vm_details.instance.ipv4 }}"
+          uuid: "{{ vm_details.instance.hw_product_uuid }}"
+          processor_count: "{{ vm_details.instance.hw_processor_count }}"
+          cores_per_socket: "{{ vm_details.instance.hw_cores_per_socket }}"
+          esxi_host: "{{ vm_details.instance.hw_esxi_host }}"
+          guest_full_name: "{{ vm_details.instance.hw_guest_full_name }}"
+          cluster: "{{ vm_details.instance.hw_cluster }}"
+          oracle_release: "{{ oracle_release }}"
+          oracle_version: "{{ ora_db_version }}"
+          pdb_name: "{{ pdb_name }}"
+          db_name: "{{ database_name }}"
+          db_password: "{{ database_passwd | b64decode}}"
+          db_type: "{{ db_type }}"
+          db_status : online
+          db_size :  "{{ db_size }}"
+          disk_number: "{{ disk_number }}"
+
+    - name: Removing entry from known_hosts if any
+      known_hosts:
+        name: "{{ db_machine_ip }}"
+        path: /root/.ssh/known_hosts
+        state: absent
+
+    - name: Adding db vm to inventory
+      add_host:
+        hostname: "{{ db_machine_ip }}"
+        vmname: "{{vmname}}"
+        ansible_python_interpreter: /usr/bin/python2
+        groups: [ 'vmnewgroup' ]
+    rescue:
+    - name: Delete VM
+      include_role:
+        name: hpe-deprovision-db
+      when: uuid is defined and rollback
+      vars:
+        uuids: ["{{uuid}}"]
+        deprovision: "vm"
+    - name: SNOW_fetch_facts
+      fail:
+        msg: "Failed while cloning VM"
+
+
+- name: Gather Disk facts and Add New Disk
+  hosts: localhost
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    rollback: true
+  tasks:
+  - block:
+    - name: Gather disk facts from virtual machine using UUID  
+      include_role:
+        name: hpe-vm-disk-facts 
+        
+    - name: Adding Disk
+      include_tasks: vm_adding_disk.yml
+      with_sequence: start=1 end="{{disk_number}}"
+      
+    rescue:
+    - name: Delete VM
+      include_role:
+        name: hpe-deprovision-db
+      when: uuid is defined and rollback
+      vars:
+        uuids: ["{{uuid}}"]
+        deprovision: "vm"
+    - name: SNOW_fetch_facts
+      fail:
+        msg: "Failed to provision disks"
+
+- name: Validating EM express and listener port
+  hosts: vmnewgroup
+  vars:
+    rollback: true
+  tasks:
+  - block:
+    - name: get all ports
+      shell: netstat -antp | grep LISTEN | grep tnslsnr |awk '{print $4}'| cut -c 4-7 | tr '\n' ',' | rev | cut -c2- | rev
+      register: all_ports
+
+    - name: SNOW_fetch_facts
+      set_fact: 
+        listener_port_main: "{{ listener_port_main }}"
+      failed_when: "listener_port_main|string in all_ports.stdout.split(',')"
+      
+    - name: SNOW_fetch_facts
+      set_fact: 
+        em_express_port: "{{ 5599 | random(start=5501) }}"
+      until: "em_express_port|string not in all_ports.stdout.split(',')"
+    rescue:
+    - name: Delete VM
+      include_role:
+        name: hpe-deprovision-db
+      when: uuid is defined and rollback
+      vars:
+        uuids: ["{{hostvars['localhost']['uuid']}}"]
+        deprovision: "vm"
+    - name: SNOW_fetch_facts
+      fail:
+        msg: "The listener port already exists. Kindly provide a unique listner port."
+        
+- name: get disk names from host
+  hosts: vmnewgroup
+  vars:
+    rollback: true
+  tasks:
+  - block:
+    - include_role:
+        name: hpe-enable-passwordless-login
+    - set_fact:
+        new_unit_numbers: "{{ hostvars['localhost']['new_unit_numbers'] }}"
+    - name: shell
+      shell: ls -d /sys/block/sd*/device/scsi_device/* |awk -F '[:/]' '{print "/dev/"$4,$9}' | grep -w "{{ item }}" | cut -f1 -d " "
+      ignore_errors: yes
+      register: disk_names
+      with_items:
+      - "{{ new_unit_numbers }}"
+    - set_fact:
+        db_disks: "{{db_disks |default([]) + [item.stdout] }}"
+        data_disks: "{{data_disks|default([]) + [{ 'device': item.stdout, 'pvname': item.stdout }]}}"
+      when: item.stdout
+      with_items:
+      - "{{disk_names.results }}"  
+               
+    rescue:
+    - name: Delete VM
+      include_role:
+        name: hpe-deprovision-db
+      when: uuid is defined and rollback
+      vars:
+        uuids: ["{{uuid}}"]
+        deprovision: "vm"
+    - name: SNOW_fetch_facts
+      fail:
+        msg: "Error occurred while gathering disk facts"
+
+- name: Configure fs,vgs and lvs
+  hosts: vmnewgroup
+  vars:
+    rollback: true
+    configure_host_disks: true
+  tasks:
+  - block:
+    - include_role:
+        name: hpe-oradb-vm-configure-fs
+    - include_role:
+        name: hpe-orahost   
+    rescue:
+    - name: Delete VM
+      include_role:
+        name: hpe-deprovision-db
+      when: rollback
+      vars:
+        uuids: ["{{hostvars['localhost']['uuid']}}"]
+        deprovision: "vm"
+    - name: SNOW_fetch_facts
+      fail:
+        msg: "Failed to add database disk"
+
+- name: Update DNS, Hostname and modify Database name
+  hosts: vmnewgroup
+  become: yes
+  vars:
+    rollback: true
+    oracle_sid: "{{ database_name }}"
+    oracle_inventory_loc: "/u01/app/oraInventory"
+    oracle_reco_dir_fs: "/u01/fra/"
+  tasks:
+  - block:
+    - name: SNOW_fetch_facts
+      set_fact: 
+        mnt_pt: "u01"
+        vg_name: "VG_ORA{{listener_port_main}}"
+        lv_name: "LV_ORA{{listener_port_main}}"
+        listener_main: "listener{{listener_port_main}}"
+        ora_db_version: "{{ ora_db_version }}"
+        new_unit_numbers: "{{new_unit_numbers[0]}}"
+        
+    - name: SNOW_fetch_facts
+      set_fact:        
+        oracle_home_main: "/{{mnt_pt}}/app/oracle/{{ ora_db_version }}/db1-base"
+    
+    - set_fact:
+         sga_target: "{{ (db_memory | int * 0.75)  | int }}M"
+         pga_aggregate_target: "{{ (db_memory | int * 0.25) | int }}M"
+      when: database_mem_percent is not defined
+    - set_fact:  
+        db_homes_config:
+           11204-base:
+             home: db1
+             version: 11.2.0.4
+             edition: EE
+      when: ora_db_version==" 11.2.0.4 "       
+    - include_role:
+        name: hpe-configure-hostname-dns
+    - include_role:
+        name: oradb-manage-db
+    #- name: Update oracle environment files.
+    #  shell: |
+    #         sed -i 's/orcl/{{ database_name }}/g' /home/oracle/scripts/setEnv.sh   
+    - include_role:
+        name: hpe-oradb-enable-archivelog
+    - include_role:
+        name: hpe-oradb-patchlist
+    rescue:
+    - name: Delete VM
+      include_role:
+        name: hpe-deprovision-db
+      when: rollback
+      vars:
+        uuids: ["{{hostvars['localhost']['uuid']}}"]
+        deprovision: "vm"
+    - name: SNOW_fetch_facts
+      fail:
+        msg: "Error occurred while configuring database"     
+
+- name: Enable Cohesity for backup
+  hosts: vmnewgroup
+  tasks:
+  - block:
+    - include_role:
+        name: hpe-backup-node-config
+      when: backup_mode is defined and backup_mode|lower == "cohesity"
+    - include_role:
+        name: hpe-backup-initial-config
+      when: backup_mode is defined and backup_mode|lower == "cohesity"
+    - name: SNOW_fetch_facts
+      set_fact:
+        Backup_Status: success
+      when: backup_mode is defined and backup_mode|lower == "cohesity"
+    environment:
+      no_proxy: "{{ cohesity_cluster_ip }}"
+    rescue:
+    - name: SNOW_fetch_facts
+      set_fact:
+        Backup_Status: failed
+    - name: SNOW_fetch_facts
+      debug:
+        msg: "Database deployed successfully, failed to enable backup"
+
+- name: Register to RMAN Catalog Server & Schedule RMAN backup
+  hosts: vmnewgroup
+  vars:
+    oracle_sid: "{{ database_name }}"
+    immediate_full: false
+    immediate_incr: false
+    oracle_base: /{{mnt_pt}}/app/oracle
+    oracle_home: "{{oracle_base}}/{{ora_db_version}}/db1-base"
+    
+    rman_policy_file: "data/rman_policy.json"
+    jsonInput: "{{ lookup('file', rman_policy_file) | from_json }}"
+    policyName: "silver"
+    
+    rman_policy_level0: "{{ jsonInput[policyName]['policy_level0'] }}"
+    rman_policy_level1: "{{ jsonInput[policyName]['policy_level1'] }}"
+    frequency_level0: "{{ jsonInput[policyName]['frequency_level0'] }}"
+    frequency_level1: "{{ jsonInput[policyName]['frequency_level1'] }}"
+    rman_retention_policy: "{{ jsonInput[policyName]['retention'] }}"
+  tasks:
+  - block:
+    - include_role:
+        name: hpe-rmancatalog-enable
+      when: backup_mode is defined and backup_mode|lower == "rman"
+    - include_role:
+        name: oradb-rman
+      when: backup_mode is defined and backup_mode|lower == "rman"
+    - name: SNOW_fetch_facts
+      set_fact:
+        Backup_Status: success
+      when: backup_mode is defined and backup_mode|lower == "rman"
+    rescue:
+    - name: SNOW_fetch_facts
+      set_fact:
+        Backup_Status: failed
+    - name: SNOW_fetch_facts
+      debug:
+        msg: "Database deployed successfully, failed to enable backup"

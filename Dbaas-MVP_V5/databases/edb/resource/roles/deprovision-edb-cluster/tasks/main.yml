@@ -1,0 +1,48 @@
+- name: Get the hostname
+  shell: cat /etc/hostname
+  register: host_name
+  when: "('primary' in {{group_names}}) or ('standby' in {{group_names}})"
+
+- set_fact:
+    host_var: "{{ host_name.stdout }}"
+  when: "('primary' in {{group_names}}) or ('standby' in {{group_names}})"  
+
+- name: Unregister Database server from PEM server
+  shell: "/usr/edb/pem/agent/bin/pemworker --unregister-server --pem-user {{ pg_pem_admin_user }} --server-addr 127.0.0.1 --server-port {{pem_pg_port}} --display-name {{ host_name.stdout }}:{{pem_pg_port}} --config-dir /usr/edb/pem/agent/etc"
+  #when: pem_agent_present
+  when: pem_agent
+  environment:
+    PEM_SERVER_PASSWORD: "{{ pg_pem_admin_password }}"
+  when: "('primary' in {{group_names}}) or ('standby' in {{group_names}})"  
+
+- name: Unregister the Agent
+  shell: "/usr/edb/pem/agent/bin/pemworker --unregister-agent --pem-user {{ pg_pem_admin_user }} --config-dir /usr/edb/pem/agent/etc"
+  #when: pem_agent_present
+  when: pem_agent
+  environment:
+    PEM_SERVER_PASSWORD: "{{ pg_pem_admin_password }}"
+  when: "('primary' in {{group_names}}) or ('standby' in {{group_names}})"  
+
+- name: Check pg_pool file exists
+  when: pgpool_enable
+  shell: "test -f /etc/sysconfig/edb/pgpool*/pgpool.conf; echo $?"
+  register: pg_pool
+  when: "('primary' in {{group_names}}) or ('standby' in {{group_names}})"
+
+- name: Get the delegate IP
+  when: pgpool_enable
+  shell: cat /etc/sysconfig/edb/pgpool*/pgpool.conf | grep delegate_IP |awk '{print $3}'
+  register: vip_ip
+  when: "('primary' in {{group_names}}) or ('standby' in {{group_names}})"
+
+- name: Release IPs to pool
+  when: pgpool_enable
+  manage_ip_pool:
+    ips: "{{[vip_ip.stdout | regex_replace(\"\\'\",'')] }}"
+    action: release_ips
+    path: "{{ip_pool_file}}"
+  vars:
+    ip_pool_file: "/opt/dbaas/ip_pool.json"
+  run_once: true
+  delegate_to: localhost
+  when: "('primary' in {{group_names}}) or ('standby' in {{group_names}})"

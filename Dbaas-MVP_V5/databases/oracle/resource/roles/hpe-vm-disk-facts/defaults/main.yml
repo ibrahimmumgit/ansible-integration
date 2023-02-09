@@ -1,0 +1,5 @@
+datacenter_name: DHCI-DC
+datastore: DBPA-Vol1
+vcenter_ip: 10.3.73.30
+vcenter_password: HP!nvent123
+vcenter_username: administrator@vsphere.local

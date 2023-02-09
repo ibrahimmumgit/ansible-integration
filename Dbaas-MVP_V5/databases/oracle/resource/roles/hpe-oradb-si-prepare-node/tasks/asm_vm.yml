@@ -1,0 +1,50 @@
+- set_fact:
+    asm_data_disk_labels: []
+    asm_data_dg_disk_labels: []
+
+- set_fact:
+    disk_label_end_point: "{{ disk_label_start_point|int +dg.disks|length }}"
+
+- name: Create ASM disk labels
+  set_fact:
+    asm_data_disk_labels: "{{ asm_data_disk_labels + [asm_disk_label_prefix+item] }}"
+  with_sequence: start="{{disk_label_start_point}}" end="{{disk_label_end_point|int - 1}}"
+
+- set_fact:
+    disk_label_start_point: "{{ disk_label_end_point }}"
+
+- name: Create a directory if it does not exist
+  file:
+    path: /dev/asm
+    state: directory
+    mode: '0755'
+
+- name: Configure udev rules for asm disks
+  lineinfile:
+    path: "{{udev_rules_file}}"
+    line: KERNEL=="sd*[!0-9]", ENV{DEVTYPE}=="disk", SUBSYSTEM=="block", PROGRAM=="/usr/lib/udev/scsi_id -g -u -d $devnode", RESULT=="3{{item.0.uuid|lower}}", RUN+="/bin/sh -c 'mknod /dev/{{item.1}} b $major $minor; chown oracle:oinstall /dev/{{item.1}}; chmod 0660 /dev/{{item.1}}'"
+    create: yes
+  with_together:
+  - "{{dg.disks}}"
+  - "{{ asm_data_disk_labels }}"
+
+- set_fact:
+    asm_data_dg_disk_labels: "{{ asm_data_dg_disk_labels + [ {'device': 'dm', 'asmlabel': item.split('/')[-1]} ]  }}"
+  with_items: "{{asm_data_disk_labels}}"
+
+- set_fact:
+    asm_data_diskgroup: >
+          {
+            "diskgroup": "{{dg.name}}",
+            "state": "present",
+            "properties": [
+              {
+                "redundancy": "{{ dg.redundancy }}",
+                "ausize": 4
+              }
+            ],
+            "attributes": [],
+            "disk": {{asm_data_dg_disk_labels}}
+          }
+- set_fact:
+    asm_diskgroups: "{{ asm_diskgroups|default([]) + [ asm_data_diskgroup ] }}"

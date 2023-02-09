@@ -1,0 +1,14 @@
+---
+- include_role:
+    name: setup_barman
+  when: backup_mode
+ 
+- name: Take immediate backup on db server
+  command:
+    cmd: "/usr/bin/barman backup {{ inventory_hostname }}-{{ pg_instance_name }} --wait"
+  environment:
+    PATH: "{{ lookup('env','PATH') }}:/usr/edb/as{{ barman_pg_version }}/bin"   
+  delegate_to: "{{ _barman_server_public_ip }}"
+  become: true
+  become_user: barman
+  when: immediate_backup

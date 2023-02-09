@@ -1,0 +1,7 @@
+---
+ip_address: "{{inventory_hostname}}"
+database_name: orcl
+assign_hostname: true
+update_resolv_conf: true
+update_dns_entries: true
+tenant_name: hpedbaas

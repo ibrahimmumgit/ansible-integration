@@ -1,0 +1,16 @@
+mnt_pt: /pg/edbvol1
+db_disk: /dev/sdb
+vg_name: vgname
+lv_name: lvedb
+edb_user: enterprisedb
+edb_group: enterprisedb
+
+host_fs_layout:
+- vgname: "{{vg_name}}"
+  state: present
+  filesystem:
+    - {mntp: "{{mnt_pt }}", lvname: "{{lv_name}}", lvsize: 100%FREE, fstype: ext4}
+  disk:
+    - {device: "{{db_disk}}", pvname: "{{db_disk}}"}
+  
+host_fs_layout_vgdisks: "{%- for disk in item.disk -%} {{disk.pvname}} {%- if not loop.last -%},{%- endif -%}{% endfor %}"

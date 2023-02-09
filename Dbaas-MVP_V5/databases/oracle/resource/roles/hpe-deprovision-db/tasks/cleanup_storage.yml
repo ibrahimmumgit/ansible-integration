@@ -1,0 +1,42 @@
+- set_fact:
+    action: 'delete_all'
+  delegate_to: localhost
+  when: delete_volume_flag
+
+- set_fact:
+    action: 'delete_host_and_vlun'
+  delegate_to: localhost
+  when: not delete_volume_flag
+
+- set_fact:
+    hosts: "{{ hosts|default([]) + [item.split(',')|join('_')] }}"
+  delegate_to: localhost
+  with_items: "{{ server_hardware_names }}"
+  when: server_model is defined and server_model != 'ProLiant DL'
+
+- set_fact:
+    hosts: "{{ hosts|default([]) + [item.split('.').0] }}"
+  delegate_to: localhost
+  with_items: "{{ server_hardware_names }}"
+  when: server_model is defined and server_model == 'ProLiant DL'
+  
+- set_fact:
+    host_names: "{{ host_names|default([]) + [ item.split(' ')|join('') ] }}"
+  delegate_to: localhost
+  with_items: "{{ hosts }}"
+
+- debug:
+    var: host_names
+  delegate_to: localhost
+
+- name: Delete host vlun and volumes
+  hpe3par_vlun_host_volume:
+    storage_system_ip: "{{ storage_system_ip }}"
+    storage_system_username: "{{ storage_system_username}}"
+    storage_system_password: "{{ storage_system_password }}"
+    host_names: "{{ item }}"
+    state: "{{ action }}"
+  run_once: true
+  delegate_to: localhost
+  with_items: "{{ host_names }}"
+  register: delete_msg

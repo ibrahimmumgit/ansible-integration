@@ -1,0 +1,456 @@
+---
+- name: Create a VM from a template
+  hosts: localhost
+  vars:
+  - vcenter_ip: "10.3.40.100"
+  - vcenter_username: "administrator@vsphere.local"
+  - vcenter_password: "P@ssw0rd123"
+  - vm_name : "Oracle18cdemo_rishi1"
+  - template_name : CentOS_Oracle18c_Template
+  - datacenter_name: DHCI-DC
+  - folder_name : "/vm/"
+  - oracle_release : "Database 18c Enterprise Edition"
+  - ora_db_version : "18.3.0.0"
+  - pdb_name : ""
+  - db_type : "NON-CDB"
+  - db_name : "orclm"
+  - new_db_name : "orclm" ##WE are setting it as we are not running from SNOW
+  - database_passwd : "*****"
+  - cpu: 4
+  - memory: 8192
+  - vm_network: "VM Network"
+  - datastore: DBPA-Vol1
+  - ssh_user: "root"
+  - ssh_pass: "P@ssw0rd123"
+  - db_size: "30"
+  - disk_number: 1
+  - tenant_name: hpedbaas
+  - dict_list: { cpu: "{{ cpu }}", memory: "{{ memory}}", db_size: "{{ db_size}}", disk_number: "{{ disk_number }}" }
+  - template_dict:
+     centos78: {12.2.0.1: orcl12_db_template, 18.3.0.0: vmrac_temp, 19.3.0.0: orcl19_db_template }
+     rhel78: {12.2.0.1: orcl12_db_template, 18.3.0.0: vmrac_temp, 19.3.0.0: orcl19_db_template }
+  - rollback: true
+  - scsi_controller: 1
+  - oracle_base: /u01/app/oracle
+  tasks:
+  - name: Validate input parameters.
+    include_role:
+      name: hpe-validate-params
+    vars:
+      type: int
+
+  #- name: VM template
+  #  set_fact:
+  #    template_name: "{{item.value}}"
+  #  when: item.key == ora_db_version
+  #  with_dict: "{{ template_dict[operating_system] }}"
+  - name: VM template
+    set_fact:
+      template_name: "{{ asm_vm_template }}"
+
+  - block:
+    - name: Generate random sequence
+      set_fact:
+        vmname: "{{tenant_name}}-{{lookup('password','/dev/null chars=digits length=6')}}"
+
+    - name: Clone the template
+      vmware_guest:
+        hostname: "{{ vcenter_ip }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: False
+        name: "{{ vmname }}"
+        template: "{{ template_name }}"
+        datacenter: "{{ datacenter_name }}"
+        folder: "{{ folder_name }}"
+        state: poweredon
+        hardware:
+          num_cpus: "{{ cpu | int }}"
+          hotadd_cpu: True
+          hotadd_memory: True
+          hotremove_cpu: True
+#          hotremove_memory: True
+          memory_mb: "{{ memory | int }}"
+        networks:
+        - name: "{{ vm_network }}"
+        datastore: "{{ datastore }}"
+        wait_for_ip_address: yes
+      register: vm_details
+
+    - name: SNOW_fetch_facts
+      set_fact:
+          vmname: "{{vmname}}"
+#          vm_fqdn: "{{vmname + '.' + domain_name }}"
+          db_machine_ip: "{{ vm_details.instance.ipv4 }}"
+          uuid: "{{ vm_details.instance.hw_product_uuid }}"
+          db_status : online
+          db_size :  "{{ db_size }}"
+          
+
+    - name: Display vm_details
+      debug:
+        var: vm_details
+
+    - name: SNOW_fetch_facts
+      set_fact: 
+        nodes_ips: "{{vm_details.instance.ipv4}}"
+
+    - name: Create nodes list
+      set_fact:
+        nodes_hosts: "{{nodes_hosts|default([]) + [{'vmname': vmname, 'node_ip': vm_details.instance.ipv4, 'uuid': vm_details.instance.hw_product_uuid}]}}"
+        nodes_vms: "{{nodes_vms|default([]) + [vmname]}}"
+
+    - name: nodes uuids fact information
+      set_fact:
+        nodes_uuids: "{{nodes_uuids|default([]) + [nodes_hosts[0].uuid]}}"
+
+    - name: Removing entry from known_hosts if any
+      known_hosts:
+       name: "{{ item.node_ip }}"
+       path: /root/.ssh/known_hosts
+       state: absent
+      with_items: "{{nodes_hosts}}"
+      ignore_errors: yes
+
+    rescue:
+    - name: Delete VM
+      with_items: "{{ nodes_uuids }}"
+      include_role:
+        name: hpe-deprovision-db
+      when: nodes_uuids is defined and rollback
+      vars:
+        uuids: ["{{ item }}"]
+        deprovision: "vm"
+    - name: SNOW_fetch_facts
+      fail:
+        msg: "Failed while cloning VM"
+
+- name: Gather Disk facts and Add New Disk
+  hosts: localhost
+  vars:
+    rollback: true
+    scsi_controller: 1
+    asm_redundancy_vlun_map:
+      external: 1
+      normal: 2
+      high: 3
+  tasks:
+  - block:
+    - name: Configure ASM diskgroups data
+      set_fact:
+        diskgroups: >
+          [
+          {% set unit_number = namespace(value=1) %}
+          {% for diskgroup in asm_disk_groups.keys()%}
+            {% for dg in asm_disk_groups[diskgroup] %}
+              {% set total_luns=asm_redundancy_vlun_map[dg.asm_redundancy|lower]|int * dg.number_of_luns|int %}
+              {% set disks = [] %}
+              {% for number in range(1,total_luns+1) %}
+                {{ disks.append({'name':'disk'+'_'+number|string, 'size':dg.lun_size, 'unit_number':unit_number.value })}}
+                {% set unit_number.value = unit_number.value + 1 %}
+              {% endfor%}
+              { "name": "{{dg.dg_name}}", "redundancy": "{{dg.asm_redundancy}}", 'disks':{{disks}}},
+            {% endfor %}
+          {% endfor %}
+          ]
+    - debug:
+        var: diskgroups
+
+    - name: Adding disk to active node
+      hpe_vmware_guest_disk:
+        hostname: "{{ vcenter_ip }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        datacenter: "{{ datacenter_name }}"
+        validate_certs: no
+        uuid: "{{ nodes_uuids[0] }}"
+        disk:
+          - size: "{{item.1.size}}Gb"
+            type: eagerzeroedthick
+            state: present
+            # autoselect_datastore: True
+            datastore: "{{ datastore }}"
+            scsi_controller: "1"
+            unit_number: "{{item.1.unit_number}}"
+            scsi_type: 'lsilogicsas'
+            disk_mode: independent_persistent
+      register: disk_facts
+      with_subelements:
+        - "{{diskgroups}}"
+        - disks
+
+    - name: Display disk facts
+      debug:
+        var: disk_facts
+
+    - name: ASM Diskgroup facts
+      set_fact:
+        asm_diskgroups_info: >
+              [
+              {% for dg in diskgroups%}
+                {% set disks = [] %}
+                {% for result in disk_facts.results %}
+                  {% set disk_data = result.disk_data|dict2items %}
+                  {% if result.item.0.name == dg.name %}
+                    {% for disk in disk_data %}
+                      {% if result.item.1.unit_number == disk.value.unit_number %}
+                        {{disks.append({"unit_number":disk.value.unit_number, "uuid": disk.value.backing_uuid.split('-')|join(''), "vmdk":disk.value.backing_filename})}}
+                      {%endif%}
+                    {% endfor%}
+                  {%endif%}
+                {% endfor%}
+                { "name": "{{dg.name}}", "redundancy": "{{dg.redundancy}}", "disks":{{disks}} },
+              {% endfor%}
+              ]
+    - debug:
+        var: asm_diskgroups_info
+
+    - set_fact:
+        ASM_disks: "{{ASM_disks|default([]) + item.disks}}"
+      with_items: "{{asm_diskgroups_info}}"
+
+    - name: Adding db vm to inventory
+      add_host:
+        hostname: "{{ nodes_hosts[0].node_ip }}"
+        vmname: "{{ nodes_hosts[0].vmname }}"
+        uuid: "{{ nodes_hosts[0].uuid }}"
+        asm_diskgroups_info: "{{ asm_diskgroups_info }}"
+        groups: [ 'oradb-si-asm' ]
+      ignore_errors: yes
+
+    rescue:
+    - name: Delete VM
+      with_items: "{{ nodes_uuids }}"
+      include_role:
+        name: hpe-deprovision-db
+      when: nodes_uuids is defined and rollback
+      vars:
+        uuids: ["{{ item }}"]
+        deprovision: "vm"
+    - name: SNOW_fetch_facts
+      fail:
+        msg: "Failed to provision disks"
+
+- name: Validating EM express and listener port
+  hosts: oradb-si-asm
+  vars:
+    rollback: true
+  tasks:
+  - block:
+    - name: get all ports
+      shell: netstat -antp | grep LISTEN | grep tnslsnr |awk '{print $4}'| cut -c 4-7 | tr '\n' ',' | rev | cut -c2- | rev
+      register: all_ports
+
+    - name: SNOW_fetch_facts
+      set_fact: 
+        listener_port_main: "{{ listener_port_main }}"
+      failed_when: "listener_port_main|string in all_ports.stdout.split(',')"
+      
+    - name: SNOW_fetch_facts
+      set_fact: 
+        em_express_port: "{{ 5599 | random(start=5501) }}"
+      until: "em_express_port|string not in all_ports.stdout.split(',')"
+    rescue:
+    - name: Delete VM
+      with_items: "{{ nodes_uuids }}"
+      include_role:
+        name: hpe-deprovision-db
+      when: nodes_uuids is defined and rollback
+      vars:
+        uuids: ["{{ item }}"]
+        deprovision: "vm"
+    - name: SNOW_fetch_facts
+      fail:
+        msg: "The listener port already exists. Kindly provide a unique listner port."
+
+- name: Host configuration
+  hosts: oradb-si-asm
+  become: yes
+  vars:
+    rollback: true
+    device_persistence: "udev"
+    configure_cluster: false
+    provision_hardware_type: "vm"
+  tasks:
+  - name: Handle Error
+    block:
+    - name: SNOW_fetch_facts
+      set_fact: 
+        mnt_pt: "u01"
+        listener_main: "listener"
+        new_unit_numbers: "1"
+
+    - name: SNOW_fetch_facts
+      set_fact:        
+        oracle_home_main: "/{{mnt_pt}}/app/oracle/{{ ora_db_version }}/db1-base"           
+
+    - include_role:
+        name: hpe-configure-hostname-dns
+    - include_role:
+        name: hpe-oradb-si-prepare-node
+    - include_role:
+        name: hpe-orahost
+    - include_role:
+        name: hpe-enable-passwordless-login
+    rescue:
+    - name: Delete VM
+      with_items: "{{ hostvars['localhost']['nodes_uuids'] }}"
+      include_role:
+        name: hpe-deprovision-db
+      when: hostvars['localhost']['nodes_uuids'] is defined and rollback
+      vars:
+        uuids: ["{{ item }}"]
+        deprovision: "vm"
+    - name: SNOW_fetch_facts
+      fail:
+        msg: "Failed while preparing for database deployment"
+
+- name: Oracle Grid Infrastructure installation & ASM Configuration
+  hosts: oradb-si-asm
+  become: yes
+  vars:
+    configure_cluster: false
+    device_persistence: "udev"
+    rollback: true
+  tasks:
+  - name: Handle Error
+    block:
+    - include_role:
+        name: oraswgi-install
+    - include_role:
+        name: oraasm-createdg
+    rescue:
+    - name: Delete VM
+      with_items: "{{ hostvars['localhost']['nodes_uuids'] }}"
+      include_role:
+        name: hpe-deprovision-db
+      when: hostvars['localhost']['nodes_uuids'] is defined and rollback
+      vars:
+        uuids: ["{{ item }}"]
+        deprovision: "vm"
+    - name: SNOW_fetch_facts
+      fail:
+        msg: "Failed to do Oracle Grid Infrastructure installation & ASM Configuration"
+
+- name: Database Server Installation & Database Creation
+  hosts: oradb-si-asm
+  become: yes
+  vars:
+    configure_cluster: false
+    ora_db_version: "{{oracle_install_version_gi}}"
+    oracle_scan: "{{oracle_cluster_name + '-scan'}}"
+    rollback: true
+  tasks:
+  - name: Handle Error
+    block:
+    - include_role:
+        name: oraswdb-install
+    - set_fact:
+        data_dgs: >
+            [
+            {% for dg in asm_disk_groups['DATA']%}
+              "{{dg.dg_name}}",
+            {% endfor %}
+            ]      
+    - set_fact:
+        arch_dgs: >
+            [
+            {% for dg in asm_disk_groups['ARCH']%}
+              "{{dg.dg_name}}",
+            {% endfor %}
+            ]      
+    - set_fact:
+        oracle_asm_init_dg: "{{data_dgs[0]}}"
+        oracle_dbf_dir_asm: "+{{data_dgs[0]}}"
+
+    - set_fact:
+        oracle_reco_dir_asm: "{% if arch_dgs %}+{{arch_dgs[0]}}{% else %}{{oracle_dbf_dir_asm}}{% endif %}"
+
+    - name: Set default REDO log init param
+      set_fact:
+        redo_log_init_params: "db_create_online_log_dest_1=+{{oracle_asm_init_dg|upper}},db_create_online_log_dest_2={{oracle_reco_dir_asm|upper}}"
+       
+    - set_fact:
+        oracle_init_params: "{{redo_log_init_params}}"         
+        
+    - include_role:
+        name: oradb-create
+    - name: SNOW_fetch_facts
+      set_fact:        
+        oracle_home: "/{{mnt_pt}}/app/oracle/{{ ora_db_version }}/db1-base"         
+    - include_role:
+        name: hpe-oradb-enable-archivelog
+    - include_role:
+        name: hpe-oradb-patchlist
+    rescue:
+    - name: Delete VM
+      with_items: "{{ hostvars['localhost']['nodes_uuids'] }}"
+      include_role:
+        name: hpe-deprovision-db
+      when: hostvars['localhost']['nodes_uuids'] is defined and rollback
+      vars:
+        uuids: ["{{ item }}"]
+        deprovision: "vm"
+    - name: SNOW_fetch_facts
+      fail:
+        msg: "Failed to deploy database"
+
+- name: Enable Cohesity for backup
+  hosts: oradb-si-asm
+  tasks:
+  - block:
+    - include_role:
+        name: hpe-backup-node-config
+      when: backup_mode is defined and backup_mode|lower == "cohesity"
+    - include_role:
+        name: hpe-backup-initial-config
+      when: backup_mode is defined and backup_mode|lower == "cohesity"
+    - name: SNOW_fetch_facts
+      set_fact:
+        Backup_Status: success
+      when: backup_mode is defined and backup_mode|lower == "cohesity"
+    environment:
+      no_proxy: "{{ cohesity_cluster_ip }}"
+    rescue:
+    - name: SNOW_fetch_facts
+      set_fact:
+        Backup_Status: failed
+    - name: SNOW_fetch_facts
+      debug:
+        msg: "Database deployed successfully, failed to enable backup"
+
+- name: Register to RMAN Catalog Server & Schedule RMAN backup
+  hosts: oradb-si-asm
+  vars:
+    oracle_sid: "{{ database_name }}"
+    immediate_full: false
+    immediate_incr: false
+    
+    rman_policy_file: "data/rman_policy.json"
+    jsonInput: "{{ lookup('file', rman_policy_file) | from_json }}"
+    policyName: "silver"
+    
+    rman_policy_level0: "{{ jsonInput[policyName]['policy_level0'] }}"
+    rman_policy_level1: "{{ jsonInput[policyName]['policy_level1'] }}"
+    frequency_level0: "{{ jsonInput[policyName]['frequency_level0'] }}"
+    frequency_level1: "{{ jsonInput[policyName]['frequency_level1'] }}"
+    rman_retention_policy: "{{ jsonInput[policyName]['retention'] }}"
+  tasks:
+  - block:
+    - include_role:
+        name: hpe-rmancatalog-enable
+      when: backup_mode is defined and backup_mode|lower == "rman"
+    - include_role:
+        name: oradb-rman
+      when: backup_mode is defined and backup_mode|lower == "rman"
+    - name: SNOW_fetch_facts
+      set_fact:
+        Backup_Status: success
+      when: backup_mode is defined and backup_mode|lower == "rman"
+    rescue:
+    - name: SNOW_fetch_facts
+      set_fact:
+        Backup_Status: failed
+    - name: SNOW_fetch_facts
+      debug:
+        msg: "Database deployed successfully, failed to enable backup"

@@ -1,0 +1,38 @@
+---
+- name: check if IP pool exists
+  stat: path={{ip_pool_file}}
+  register: pool_file_stat
+  delegate_to: localhost
+
+- fail:
+    msg: "Could not find IP pool, Please creat IP pool and try again"
+  when: not pool_file_stat.stat.exists
+  delegate_to: localhost
+
+- name: Total IPs required
+  set_fact:
+    total_ips: "{{(nodes|int+scan_ips)|int}}"
+  when: total_ips is not defined
+  delegate_to: localhost
+
+- name: Get ips from pool
+  manage_ip_pool:
+    cluster_name: "{{oracle_cluster_name}}"
+    count: "{{total_ips|int}}"
+    path: "{{ip_pool_file}}"
+    action: reserve_ips
+  register: pool_facts
+  run_once: true
+  delegate_to: localhost
+
+# Workaroung to get fact on all hosts
+- name: Add var to group 'Dummy'
+  add_host:
+    name: dummy
+    group: dummy
+    usable_ips: "{{ pool_facts.usable_ips }}"
+  run_once: true
+
+- name: Usable IPs
+  set_fact:
+    usable_ips: "{{hostvars['dummy']['usable_ips']}}"

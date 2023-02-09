@@ -1,0 +1,17 @@
+- name:
+  set_fact:
+    ip_file: "{{ ip_path }}/{{ item.split(',').0 }}"
+
+- name: check file exists.
+  stat:
+    path: "{{ ip_file }}"
+  register: ip_file_stat
+
+- debug:
+    msg: "File not found .. Unable to retrive IP file."
+  when: ip_file_stat.stat.exists == False
+
+- name: Delete IP file.
+  shell: rm "{{ ip_file }}"
+  register: ip_addr
+  when: ip_file_stat.stat.exists

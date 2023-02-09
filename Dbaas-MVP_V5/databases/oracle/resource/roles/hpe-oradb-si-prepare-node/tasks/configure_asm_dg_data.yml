@@ -1,0 +1,77 @@
+- name: Install scsi scan package RHEL
+  yum: name="sg3_utils.x86_64" state=installed
+  when: ansible_os_family == 'RedHat'
+
+- name: Install multipath package RHEL
+  yum: name="device-mapper-multipath" state=installed
+  when: ansible_os_family == 'RedHat'
+
+- name: get disk name
+  shell: mpathconf --enable
+
+- name: 'Configure multipath conf'
+  become: yes
+  template:
+    src: "hpe3par_multipath_config.j2"
+    dest: /etc/multipath.conf
+
+- name:  Start multipathd
+  systemd:
+    name: multipathd
+    state: started
+
+- name:  enabled multipathd
+  systemd:
+    name: multipathd
+    enabled: yes
+
+- name: scan disks
+  shell: /usr/bin/rescan-scsi-bus.sh
+
+- set_fact:
+    disk_label_start_point: 1
+
+- name: configure ASM diskgroup list
+  include_tasks: asm_bm.yml
+  with_items: "{{asm_diskgroups_info}}"
+  loop_control:
+    loop_var: dg
+  when: provision_hardware_type is not defined
+
+- name: configure ASM diskgroup list for VM
+  include_tasks: asm_vm.yml
+  with_items: "{{asm_diskgroups_info}}"
+  loop_control:
+    loop_var: dg
+  when: provision_hardware_type is defined and provision_hardware_type == 'vm'
+
+- set_fact:
+    data_dgs: >
+            [
+            {% for dg in asm_disk_groups['DATA']%}
+              "{{dg.dg_name}}",
+            {% endfor %}
+            ]
+- set_fact:
+    arch_dgs: >
+            [
+            {% for dg in asm_disk_groups['ARCH']%}
+              "{{dg.dg_name}}",
+            {% endfor %}
+            ]
+
+- set_fact:
+    oracle_asm_init_dg: "{{data_dgs[0]}}"
+    oracle_dbf_dir_asm: "+{{data_dgs[0]}}"
+
+- set_fact:
+    oracle_reco_dir_asm: "{% if arch_dgs %}+{{arch_dgs[0]}}{% else %}{{oracle_dbf_dir_asm}}{% endif %}"
+
+
+- name: Set default REDO log init param
+  set_fact:
+    redo_log_init_params: "db_create_online_log_dest_1=+{{oracle_asm_init_dg|upper}}"
+
+
+- set_fact:
+    oracle_init_params: "{{redo_log_init_params}}"

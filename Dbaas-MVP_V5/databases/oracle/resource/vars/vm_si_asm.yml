@@ -1,0 +1,53 @@
+"asm_disk_groups": { "ARCH": [ { "dg_name": "ARCH", "asm_redundancy": "{{oracle_asm_dg_redundancy}}", "lun_size": "{{lun_size|int}}", "number_of_luns": "{{number_of_luns|int}}" } ], "DATA": [ { "dg_name": "DATA", "asm_redundancy": "{{oracle_asm_dg_redundancy}}", "lun_size": "{{lun_size|int}}", "number_of_luns": "{{number_of_luns|int}}" } ] }
+"asm_vm_template": vmrac3-temp
+"backup_mode": 'no'
+"character_set_main": WE8MSWIN1252
+"cpu": 4
+"database_name": orclm
+"database_passwd": SFBpbnZlbnQxMjM=
+"datacenter_name": DHCI-DC
+"datastore": DBPA-Vol1
+"db_memory": 3500
+"db_size": '{{lun_size}}'
+"db_type": NON-CDB
+"disk_number": '{{number_of_luns}}'
+"folder_name": /VMs/
+"listener_main": 'listener{{listener_port_main}}'
+"listener_port_main": 1521
+"lun_size": 30
+"lv_name": 'LV_ORA{{listener_port_main}}'
+"memory": 8192
+"n_character_set_main": AL16UTF16
+"number_of_luns": 1
+"operating_system": centos78
+"ora_db_version": 19.3.0.0
+"oracle_asm_dg_redundancy": external
+"oracle_is_container": false
+"oracle_password": '{{ database_passwd | b64decode }}'
+"oracle_pdb_name": PDB1
+"oracle_release": Database 19c Enterprise Edition
+"oracle_sw_source_www": 'http://10.3.40.31/orasw'
+"oracle_user": oracle
+"patch_11g": p18370031_112040_Linux-x86-64.zip
+"policyName": silver
+"rmancatalog_registered": false
+"rollback": false
+"service_name": vikrfeb242
+"storage_type": ASM
+"template_dict": { "centos78": { "11.2.0.4": "oracle-11g", "12.2.0.1": "oracle12cnew", "18.3.0.0": "oracle18cnew", "19.3.0.0": "oracle_19c_123_new" }, "redhat78": { "11.2.0.4": "oracle-11g", "12.2.0.1": "oracle12cnew", "18.3.0.0": "oracle18cnew", "19.3.0.0": "oracle_19c_123_new" }, "rhel78": { "11.2.0.4": "oracle-11g", "12.2.0.1": "oracle12cnew", "18.3.0.0": "oracle18cnew", "19.3.0.0": "oracle_19c_123_new" }}
+"tenant_name": hpedbaas
+"vg_name": 'VG_ORA{{listener_port_main}}'
+"vmware_cluster_name": DHCI-Cluster1
+"oracle_scan_port_main": 1521
+"oracle_install_version_gi": 19.3.0.0
+"TSIG_key_name": "nsupdate"
+"TSIG_key_secret": "qsiGQ/YHB75z2Hu3dBva7w=="
+"dns_server": "10.3.73.241"
+"domain_name": "dhci.com"
+"forward_zone": "dhci.com"
+"reverse_zone": "73.3.10.in-addr.arpa"
+"vcenter_ip": "10.3.73.30"
+"vcenter_username": "administrator@vsphere.local"
+"vcenter_password": "HP!nvent123"
+"ansible_ssh_user": root
+"ansible_ssh_pass": P@ssw0rd123

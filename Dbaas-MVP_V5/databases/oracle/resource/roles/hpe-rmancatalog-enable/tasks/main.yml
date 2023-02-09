@@ -1,0 +1,61 @@
+
+- set_fact:
+    grid_install: false
+
+- name: check if GI has been configured
+  stat: path=/etc/oracle/olr.loc
+  register: olrloc
+
+- set_fact:
+    grid_install: true
+  when: olrloc.stat.exists
+
+- name: Check pmon process
+  shell: "ps -ef | grep ora_pmon | grep -v grep | awk '{print $8}' | cut -d '_' -f3"
+  register: instance_name_std
+  when: (rmancatalog_registered == false) and (grid_install == true)
+
+- set_fact:
+    instance_name: '{{ instance_name_std.stdout }}'
+  when: (rmancatalog_registered == false) and (grid_install == true)
+  
+- name: Add a line to a /etc/oratab
+  lineinfile:
+    path: "/etc/oratab"
+    line: "{{ oracle_sid }}:{{ oracle_home }}:N"
+    create: yes
+
+- name: Add a line to a file if the file does not exist, without passing regexp
+  lineinfile:
+    path: "{{ oracle_home }}/network/admin/tnsnames.ora"
+    line: CATALOG = (DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = {{ rmancatalog_server }})(PORT = 1521)) (CONNECT_DATA = (SERVER = DEDICATED) (SERVICE_NAME = {{ rmancatalog_servicename }})))
+    create: yes
+
+
+- name: Register Catalog Server for GI
+  shell: |
+              rman target / catalog {{ rmancatalog_user }}/{{ rmancatalog_passwd }}@{{ rmancatalog_servicename }} <<EOF
+              register database;
+              EOF
+  become: true
+  become_user: "{{ oracle_user }}"
+  environment:
+    ORACLE_SID: "{{ instance_name }}"
+    ORACLE_BASE:  "{{ oracle_base }}"
+    ORACLE_HOME: "{{ oracle_home }}"
+    PATH: "{{ oracle_home }}/bin"
+  when: grid_install == true
+
+- name: Register Catalog Server for SI
+  shell: |
+              rman target / catalog {{ rmancatalog_user }}/{{ rmancatalog_passwd }}@{{ rmancatalog_servicename }} <<EOF
+              register database;
+              EOF
+  become: true
+  become_user: "{{ oracle_user }}"
+  environment:
+    ORACLE_SID: "{{ oracle_sid }}"
+    ORACLE_BASE:  "{{ oracle_base }}"
+    ORACLE_HOME: "{{ oracle_home }}"
+    PATH: "{{ oracle_home }}/bin"
+  when: grid_install == false

@@ -1,0 +1,85 @@
+- name: Configure ASM diskgroups data
+  when: storage_type|upper == "ASM" or configure_cluster
+  block:
+  - name: Get details of "{{ item.1.name }}"
+    hpe3par_volume_facts:
+      storage_system_ip: "{{ storage_system_ip }}"
+      storage_system_username: "{{ storage_system_username }}"
+      storage_system_password: "{{ storage_system_password }}"
+      operation: get_volume_wwn
+      volume_name: "{{ item.1.name }}"
+    register: volumes_facts
+    with_subelements:
+      - "{{diskgroups}}"
+      - volumes
+
+  - fail:
+      msg: "Could not find volumewwn for volume {{item.item.1.name}}"
+    with_items: "{{volumes_facts.results}}"
+    when: not item.volumewwn
+
+  - set_fact:
+      asm_diskgroups_info: >
+                [
+                {% for dg in diskgroups%}
+                  {% set volume_wwns = [] %}
+                  {% for result in volumes_facts.results %}
+                    {% if result.item.0.name == dg.name %}
+                      {{volume_wwns.append(result.volumewwn)}}
+                    {%endif%}
+                  {% endfor%}
+                  { "name": "{{dg.name}}", "redundancy": "{{dg.redundancy}}", 'volume_wwns':{{volume_wwns}} },
+                {% endfor%}
+                ]
+
+  - debug:
+      var: asm_diskgroups_info
+
+- name: Configure FS volumes data
+  when: storage_type|upper == "FS"
+  block:
+  - name: Get details of "{{ item.1.name }}"
+    hpe3par_volume_facts:
+      storage_system_ip: "{{ storage_system_ip }}"
+      storage_system_username: "{{ storage_system_username }}"
+      storage_system_password: "{{ storage_system_password }}"
+      operation: get_volume_wwn
+      volume_name: "{{ item.1.name }}"
+    register: volumes_facts
+    with_subelements:
+      - "{{mount_points}}"
+      - volumes
+
+  - fail:
+      msg: "Could not find volumewwn for volume {{item.item.1.name}}"
+    with_items: "{{volumes_facts.results}}"
+    when: not item.volumewwn
+
+  - set_fact:
+      fs_mount_pt_info: >
+                [
+                {% for pt in mount_points%}
+                  {% set volume_wwns = [] %}
+                  {% for result in volumes_facts.results %}
+                    {% if result.item.0.name == pt.name %}
+                      {{volume_wwns.append(result.volumewwn)}}
+                    {%endif%}
+                  {% endfor%}
+                  { "name": "{{pt.name}}", 'volume_wwns':{{volume_wwns}} },
+                {% endfor%}
+                ]
+
+  - debug:
+      var: fs_mount_pt_info
+      
+  - debug:
+      var: fs_mount_pt_info[0].volume_wwns
+  
+   
+  - debug:
+      var: fs_mount_pt_info.volume_wwns[0]
+      
+  - set_fact:
+      volume_wwns_main: "{{fs_mount_pt_info[0].volume_wwns}}"
+      
+      

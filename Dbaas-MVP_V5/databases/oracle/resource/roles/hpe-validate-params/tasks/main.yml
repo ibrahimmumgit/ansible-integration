@@ -1,0 +1,5 @@
+- name: Validate user inputs.
+  fail:
+     msg: "Invalid parameter {{item.key}} - {{item.value}}"
+  when: item.value | {{ type }} == 0
+  with_dict: "{{ dict_list }}" 
