@@ -1,6 +1,6 @@
 ---
 - name: Create a VM from ISO Image and convert it to a Template
-  hosts: all
+  hosts: localhost
   gather_facts: false
   connection: local
   tasks:
