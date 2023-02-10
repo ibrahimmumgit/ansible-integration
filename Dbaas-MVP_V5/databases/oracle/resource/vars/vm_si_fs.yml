@@ -3,7 +3,7 @@
 "character_set_main": "WE8MSWIN1252"
 "cpu": 4
 "database_name": "orclm1"
-"database_passwd": "password"
+"database_passwd": "b3JhZGJAMTIz"
 "datacenter_name": "DHCI-DC"
 "datastore": "DBPA-Vol1"
 "db_memory": 3500
@@ -37,16 +37,14 @@
 "tenant_name": "hpedbaas"
 "vg_name": "VG_ORA{{listener_port_main}}"
 "vmware_cluster_name": "DHCI-Cluster1"
-"TSIG_key_name": "nsupdate"
-"TSIG_key_secret": "qsiGQ/YHB75z2Hu3dBva7w=="
-"dns_server": "10.3.73.241"
-"domain_name": "dhci.com"
-"forward_zone": "dhci.com"
-"reverse_zone": "73.3.10.in-addr.arpa"
-"vcenter_ip": "10.3.73.30"
-"vcenter_username": "administrator@vsphere.local"
-"vcenter_password": "HP!nvent123"
-"ansible_ssh_user": root
-"ansible_ssh_pass": P@ssw0rd123
-"asm_vm_template": vmrac3-temp
-"asm_disk_groups": { "ARCH": [ { "dg_name": "ARCH", "asm_redundancy": "{{oracle_asm_dg_redundancy}}", "lun_size": "{{lun_size|int}}", "number_of_luns": "{{number_of_luns|int}}" } ], "DATA": [ { "dg_name": "DATA", "asm_redundancy": "{{oracle_asm_dg_redundancy}}", "lun_size": "{{lun_size|int}}", "number_of_luns": "{{number_of_luns|int}}" } ] }
+#"TSIG_key_name": "nsupdate"
+#"TSIG_key_secret": "qsiGQ/YHB75z2Hu3dBva7w=="
+#"dns_server": "10.3.73.241"
+#"domain_name": "dhci.com"
+#"forward_zone": "dhci.com"
+#"reverse_zone": "73.3.10.in-addr.arpa"
+#"vcenter_ip": "10.3.73.30"
+#"vcenter_username": "administrator@vsphere.local"
+#"vcenter_password": "HP!nvent123"
+#"asm_vm_template": vmrac3-temp
+#"asm_disk_groups": { "ARCH": [ { "dg_name": "ARCH", "asm_redundancy": "{{oracle_asm_dg_redundancy}}", "lun_size": "{{lun_size|int}}", "number_of_luns": "{{number_of_luns|int}}" } ], "DATA": [ { "dg_name": "DATA", "asm_redundancy": "{{oracle_asm_dg_redundancy}}", "lun_size": "{{lun_size|int}}", "number_of_luns": "{{number_of_luns|int}}" } ] }
