@@ -78,6 +78,8 @@
         hostname: "{{ db_machine_ip }}"
         vmname: "{{vmname}}"
         ansible_python_interpreter: /usr/bin/python2
+        ansible_ssh_user: root
+        ansible_ssh_pass: P@ssw0rd123
         groups: [ 'vmnewgroup' ]
     rescue:
     - name: Delete VM
