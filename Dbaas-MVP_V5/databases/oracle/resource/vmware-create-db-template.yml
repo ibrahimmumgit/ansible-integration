@@ -96,6 +96,8 @@
   hosts: db-server
   vars:
    si_template: true
+   ora_db_version: 18.3.0.0
+   oracle_sw_source_www: 'http://192.168.9.136/files/orasw/'
   become: yes
   roles:
   - { role: hpe-orahost, when: si_template }
