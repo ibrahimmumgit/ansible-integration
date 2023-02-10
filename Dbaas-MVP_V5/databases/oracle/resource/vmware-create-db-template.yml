@@ -7,12 +7,17 @@
    - set_fact:
       datacenter: C3
       datastore: datastore1
-      db_template_name: Morpheus-DBAASClone
+      db_template_name: Morpheus-DBAAS
+      ora_db_version: 18.3.0.0
       guest_id: rhel7_64Guest
-      si_template: false
+      si_template: true
       vcenter_ip: "192.168.9.70"
       vcenter_username: "administrator@vsphere.local"
       vcenter_password: "VMware1!"
+      oracle_sw_source_www: 'http://192.168.9.136/files/orasw/'
+      ansible_ssh_user: root
+      ansible_ssh_pass: P@ssw0rd123
+      db_machine_ip: 192.168.9.131
 
    - name: Create a virtual machine from a Custom ISO
      tags: never
