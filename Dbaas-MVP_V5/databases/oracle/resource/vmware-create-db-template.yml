@@ -77,6 +77,8 @@
        hostname: db-server
        ansible_ssh_host: "{{ db_machine_ip }}"
        ansible_ssh_port: 22
+       ansible_ssh_user: root
+       ansible_ssh_pass: P@ssw0rd123
      when: si_template
 
    - debug:
