@@ -1,36 +1,8 @@
 ---
 - name: Create a VM from a template
   hosts: localhost
-  vars:
-  - vcenter_ip: "10.3.40.100"
-  - vcenter_username: "administrator@vsphere.local"
-  - vcenter_password: "P@ssw0rd123"
-  - vm_name : "Oracle18cdemo_rishi1"
-  - template_name : CentOS_Oracle18c_Template
-  - datacenter_name  : DBaaS_Datacenter
-  - folder_name : "/vm/"
-  - oracle_release : "Database 18c Enterprise Edition"
-  - ora_db_version : "18.3.0.0"
-  - pdb_name : ""
-  - db_type : "NON-CDB"
-  - db_name : "orclm"
-  - new_db_name : "orclm" ##WE are setting it as we are not running from SNOW
-  - database_passwd : "*****"
-  - cpu: 4
-  - memory: 8192
-  - vm_network: "VM Network"
-  - datastore: DBaaSMgmt_DS2
-  - ssh_user: "root"
-  - ssh_pass: "P@ssw0rd123"
-  - db_size: "30"
-  - disk_number: 1
-  - tenant_name: hpedbaas
-  - dict_list: { cpu: "{{ cpu }}", memory: "{{ memory}}", db_size: "{{ db_size}}", disk_number: "{{ disk_number }}" }
-  - template_dict:
-     centos78: {12.2.0.1: orcl12_db_template, 18.3.0.0: orcl18_db_template, 19.3.0.0: orcl19_db_template }
-     redhat78: {12.2.0.1: orcl12_db_template, 18.3.0.0: orcl18_db_template, 19.3.0.0: orcl19_db_template }
-  - ansible_python_interpreter: /usr/bin/python3
-  - rollback: true
+  vars_files:
+    - "./vars/vm_si_fs.yml"
   tasks:
   - name: Validate input parameters.
     include_role:
