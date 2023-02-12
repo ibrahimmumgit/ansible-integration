@@ -1,83 +1,92 @@
 ---
-- name: Create a VM from a template
-  hosts: localhost
-  vars_files:
-    - "./vars/vm_si_fs.yml"
-  tasks:
-  - name: Validate input parameters.
-    include_role:
-      name: hpe-validate-params
-    vars:
-      type: int
+#- name: Create a VM from a template
+#  hosts: localhost
+#  vars_files:
+#    - "./vars/vm_si_fs.yml"
+#  tasks:
+#  - name: Validate input parameters.
+#    tags: never
+#    include_role:
+#      name: hpe-validate-params
+#    vars:
+#      type: int
 
-  - name: VM template
-    set_fact:
-      template_name: "{{item.value}}"
-    when: item.key == ora_db_version
-    with_dict: "{{ template_dict[operating_system] }}"
+#  - name: VM template
+#    tags: never
+#    set_fact:
+#      template_name: "{{item.value}}"
+#    when: item.key == ora_db_version
+#    with_dict: "{{ template_dict[operating_system] }}"
 
-  - block:
-    - name: Generate random sequence
-      set_fact:
-        vmname: "{{tenant_name}}-{{lookup('password','/dev/null chars=digits length=6')}}"
+#  - block:
+#    - name: Generate random sequence
+#      tags: never
+#      set_fact:
+#        vmname: "{{tenant_name}}-{{lookup('password','/dev/null chars=digits length=6')}}"
 
-    - name: Clone the template
-      vmware_guest:
-        hostname: "{{ vcenter_ip }}"
-        username: "{{ vcenter_username }}"
-        password: "{{ vcenter_password }}"
-        validate_certs: False
-        name: "{{ vmname }}"
-        template: "{{ template_name }}"
-        datacenter: "{{ datacenter_name }}"
-        cluster: "{{vmware_cluster_name}}"
-        folder: "{{ folder_name }}"
-        state: poweredon
-        hardware:
-          num_cpus: "{{ cpu | int }}"
-          hotadd_cpu: True
-          hotadd_memory: True
-          hotremove_cpu: True
+#    - name: Clone the template
+#      tags: never
+#      vmware_guest:
+#        hostname: "{{ vcenter_ip }}"
+#        username: "{{ vcenter_username }}"
+#        password: "{{ vcenter_password }}"
+#        validate_certs: False
+#        name: "{{ vmname }}"
+#        template: "{{ template_name }}"
+#        datacenter: "{{ datacenter_name }}"
+#        cluster: "{{vmware_cluster_name}}"
+#        folder: "{{ folder_name }}"
+#        state: poweredon
+#        hardware:
+#          num_cpus: "{{ cpu | int }}"
+#          hotadd_cpu: True
+#          hotadd_memory: True
+#          hotremove_cpu: True
 #          hotremove_memory: True
-          memory_mb: "{{ memory | int }}"
-        networks:
-        - name: "{{ vm_network }}"
-        datastore: "{{ datastore }}"
-        wait_for_ip_address: yes
-      register: vm_details
+#          memory_mb: "{{ memory | int }}"
+#        networks:
+#        - name: "{{ vm_network }}"
+#        datastore: "{{ datastore }}"
+#        wait_for_ip_address: yes
+#      register: vm_details
 
-    - name: SNOW_fetch_facts
-      set_fact:
-          vmname: "{{vmname}}"
-          vm_fqdn: "{{vmname + '.' + domain_name }}"
-          db_machine_ip: "{{ vm_details.instance.ipv4 }}"
-          uuid: "{{ vm_details.instance.hw_product_uuid }}"
-          processor_count: "{{ vm_details.instance.hw_processor_count }}"
-          cores_per_socket: "{{ vm_details.instance.hw_cores_per_socket }}"
-          esxi_host: "{{ vm_details.instance.hw_esxi_host }}"
-          guest_full_name: "{{ vm_details.instance.hw_guest_full_name }}"
-          cluster: "{{ vm_details.instance.hw_cluster }}"
-          oracle_release: "{{ oracle_release }}"
-          oracle_version: "{{ ora_db_version }}"
-          pdb_name: "{{ pdb_name }}"
-          db_name: "{{ database_name }}"
-          db_password: "{{ database_passwd | b64decode}}"
-          db_type: "{{ db_type }}"
-          db_status : online
-          db_size :  "{{ db_size }}"
-          disk_number: "{{ disk_number }}"
+#    - name: SNOW_fetch_facts
+#      tags: never
+#      set_fact:
+#          vmname: "{{vmname}}"
+#          vm_fqdn: "{{vmname + '.' + domain_name }}"
+#          db_machine_ip: "{{ vm_details.instance.ipv4 }}"
+#          uuid: "{{ vm_details.instance.hw_product_uuid }}"
+#          processor_count: "{{ vm_details.instance.hw_processor_count }}"
+#          cores_per_socket: "{{ vm_details.instance.hw_cores_per_socket }}"
+#          esxi_host: "{{ vm_details.instance.hw_esxi_host }}"
+#          guest_full_name: "{{ vm_details.instance.hw_guest_full_name }}"
+#          cluster: "{{ vm_details.instance.hw_cluster }}"
+#          oracle_release: "{{ oracle_release }}"
+#          oracle_version: "{{ ora_db_version }}"
+#          pdb_name: "{{ pdb_name }}"
+#          db_name: "{{ database_name }}"
+#          db_password: "{{ database_passwd | b64decode}}"
+#          db_type: "{{ db_type }}"
+#          db_status : online
+#          db_size :  "{{ db_size }}"
+#          disk_number: "{{ disk_number }}"
 
-    - name: Removing entry from known_hosts if any
-      known_hosts:
-        name: "{{ db_machine_ip }}"
-        path: /root/.ssh/known_hosts
-        state: absent
+#    - name: Removing entry from known_hosts if any
+#      tags: never
+#      known_hosts:
+#        name: "{{ db_machine_ip }}"
+#        path: /root/.ssh/known_hosts
+#        state: absent
 
+- name: Add vm to hostgroup
+  hosts: localhost
+  tasks:
     - name: Adding db vm to inventory
+      tags: never
       add_host:
         hostname: "{{ db_machine_ip }}"
         vmname: "{{vmname}}"
-        ansible_python_interpreter: /usr/bin/python2
         ansible_ssh_user: root
         ansible_ssh_pass: P@ssw0rd123
         groups: [ 'vmnewgroup' ]
