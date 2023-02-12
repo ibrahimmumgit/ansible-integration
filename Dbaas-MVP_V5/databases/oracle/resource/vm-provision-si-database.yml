@@ -81,7 +81,12 @@
 
 - name: Add vm to hostgroup
   hosts: localhost
+  vars_files:
+    - "./vars/vm_si_fs.yml"
   tasks:
+    - set_fact:
+        uuid: "{{ uuid }}"
+
     - name: Adding db vm to inventory
       tags: never
       add_host:
@@ -90,79 +95,81 @@
         ansible_ssh_user: root
         ansible_ssh_pass: P@ssw0rd123
         groups: [ 'vmnewgroup' ]
-    rescue:
-    - name: Delete VM
-      include_role:
-        name: hpe-deprovision-db
-      when: uuid is defined and rollback
-      vars:
-        uuids: ["{{uuid}}"]
-        deprovision: "vm"
-    - name: SNOW_fetch_facts
-      fail:
-        msg: "Failed while cloning VM"
+#    rescue:
+#    - name: Delete VM
+#      include_role:
+#        name: hpe-deprovision-db
+#      when: uuid is defined and rollback
+#      vars:
+#        uuids: ["{{uuid}}"]
+#        deprovision: "vm"
+#    - name: SNOW_fetch_facts
+#      fail:
+#        msg: "Failed while cloning VM"
 
 
-- name: Gather Disk facts and Add New Disk
-  hosts: localhost
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
-    rollback: true
-  tasks:
-  - block:
-    - name: Gather disk facts from virtual machine using UUID  
-      include_role:
-        name: hpe-vm-disk-facts 
+#- name: Gather Disk facts and Add New Disk
+#  hosts: localhost
+#  vars:
+#    ansible_python_interpreter: /usr/bin/python3
+#    rollback: true
+#  tasks:
+#  - block:
+#    - name: Gather disk facts from virtual machine using UUID  
+#      include_role:
+#        name: hpe-vm-disk-facts 
         
-    - name: Adding Disk
-      include_tasks: vm_adding_disk.yml
-      with_sequence: start=1 end="{{disk_number}}"
+#    - name: Adding Disk
+#      include_tasks: vm_adding_disk.yml
+#      with_sequence: start=1 end="{{disk_number}}"
       
-    rescue:
-    - name: Delete VM
-      include_role:
-        name: hpe-deprovision-db
-      when: uuid is defined and rollback
-      vars:
-        uuids: ["{{uuid}}"]
-        deprovision: "vm"
-    - name: SNOW_fetch_facts
-      fail:
-        msg: "Failed to provision disks"
+#    rescue:
+#    - name: Delete VM
+#      include_role:
+#        name: hpe-deprovision-db
+#      when: uuid is defined and rollback
+#      vars:
+#        uuids: ["{{uuid}}"]
+#        deprovision: "vm"
+#    - name: SNOW_fetch_facts
+#      fail:
+#        msg: "Failed to provision disks"
 
-- name: Validating EM express and listener port
-  hosts: vmnewgroup
-  vars:
-    rollback: true
-  tasks:
-  - block:
-    - name: get all ports
-      shell: netstat -antp | grep LISTEN | grep tnslsnr |awk '{print $4}'| cut -c 4-7 | tr '\n' ',' | rev | cut -c2- | rev
-      register: all_ports
+#- name: Validating EM express and listener port
+#  hosts: vmnewgroup
+#  vars:
+#    rollback: true
+#  tasks:
+#  - block:
+#    - name: get all ports
+#      shell: netstat -antp | grep LISTEN | grep tnslsnr |awk '{print $4}'| cut -c 4-7 | tr '\n' ',' | rev | cut -c2- | rev
+#      register: all_ports
 
-    - name: SNOW_fetch_facts
-      set_fact: 
-        listener_port_main: "{{ listener_port_main }}"
-      failed_when: "listener_port_main|string in all_ports.stdout.split(',')"
+#    - name: SNOW_fetch_facts
+#      set_fact: 
+#        listener_port_main: "{{ listener_port_main }}"
+#      failed_when: "listener_port_main|string in all_ports.stdout.split(',')"
       
-    - name: SNOW_fetch_facts
-      set_fact: 
-        em_express_port: "{{ 5599 | random(start=5501) }}"
-      until: "em_express_port|string not in all_ports.stdout.split(',')"
-    rescue:
-    - name: Delete VM
-      include_role:
-        name: hpe-deprovision-db
-      when: uuid is defined and rollback
-      vars:
-        uuids: ["{{hostvars['localhost']['uuid']}}"]
-        deprovision: "vm"
-    - name: SNOW_fetch_facts
-      fail:
-        msg: "The listener port already exists. Kindly provide a unique listner port."
+#    - name: SNOW_fetch_facts
+#      set_fact: 
+#        em_express_port: "{{ 5599 | random(start=5501) }}"
+#      until: "em_express_port|string not in all_ports.stdout.split(',')"
+#    rescue:
+#    - name: Delete VM
+#      include_role:
+#        name: hpe-deprovision-db
+#      when: uuid is defined and rollback
+#      vars:
+#        uuids: ["{{hostvars['localhost']['uuid']}}"]
+#        deprovision: "vm"
+#    - name: SNOW_fetch_facts
+#      fail:
+#        msg: "The listener port already exists. Kindly provide a unique listner port."
         
 - name: get disk names from host
   hosts: vmnewgroup
+  vars_files:
+    - "./vars/vm_si_fs.yml"
   vars:
     rollback: true
   tasks:
@@ -170,7 +177,8 @@
     - include_role:
         name: hpe-enable-passwordless-login
     - set_fact:
-        new_unit_numbers: "{{ hostvars['localhost']['new_unit_numbers'] }}"
+        #new_unit_numbers: "{{ hostvars['localhost']['new_unit_numbers'] }}"
+        new_unit_numbers: [1]
     - name: shell
       shell: ls -d /sys/block/sd*/device/scsi_device/* |awk -F '[:/]' '{print "/dev/"$4,$9}' | grep -w "{{ item }}" | cut -f1 -d " "
       ignore_errors: yes
@@ -188,9 +196,9 @@
     - name: Delete VM
       include_role:
         name: hpe-deprovision-db
-      when: uuid is defined and rollback
+      when: rollback
       vars:
-        uuids: ["{{uuid}}"]
+        uuids: ["{{hostvars['localhost']['uuid']}}"]
         deprovision: "vm"
     - name: SNOW_fetch_facts
       fail:
@@ -198,6 +206,8 @@
 
 - name: Configure fs,vgs and lvs
   hosts: vmnewgroup
+  vars_files:
+    - "./vars/vm_si_fs.yml"
   vars:
     rollback: true
     configure_host_disks: true
@@ -222,6 +232,8 @@
 - name: Update DNS, Hostname and modify Database name
   hosts: vmnewgroup
   become: yes
+  vars_files:
+    - "./vars/vm_si_fs.yml"
   vars:
     rollback: true
     oracle_sid: "{{ database_name }}"
@@ -253,8 +265,8 @@
              version: 11.2.0.4
              edition: EE
       when: ora_db_version==" 11.2.0.4 "       
-    - include_role:
-        name: hpe-configure-hostname-dns
+    #- include_role:
+    #    name: hpe-configure-hostname-dns
     - include_role:
         name: oradb-manage-db
     #- name: Update oracle environment files.
@@ -278,6 +290,8 @@
 
 - name: Enable Cohesity for backup
   hosts: vmnewgroup
+  vars_files:
+    - "./vars/vm_si_fs.yml"
   tasks:
   - block:
     - include_role:
@@ -302,6 +316,8 @@
 
 - name: Register to RMAN Catalog Server & Schedule RMAN backup
   hosts: vmnewgroup
+  vars_files:
+    - "./vars/vm_si_fs.yml"
   vars:
     oracle_sid: "{{ database_name }}"
     immediate_full: false
