@@ -14,8 +14,8 @@
     - name: add host
       add_host:
         hostname: "{{ db_machine_ip }}"
-        ansible_ssh_user: root
-        ansible_ssh_pass: P@ssw0rd123
+        ansible_ssh_user: ibrahim
+        ansible_ssh_pass: P@ssw0rd
         groups: [ 'si-test' ]
 - name: testing in target machine
   hosts: all
