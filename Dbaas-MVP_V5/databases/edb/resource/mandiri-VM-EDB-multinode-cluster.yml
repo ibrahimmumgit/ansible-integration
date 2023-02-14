@@ -2,9 +2,6 @@
 - name: Create a VM from a template
   hosts: localhost
   vars:
-  - vcenter_ip: "10.3.40.100"
-  - vcenter_username: "administrator@vsphere.local"
-  - vcenter_password: "P@ssw0rd123"
   - vm_name: "EDB_Deployed"
   - datacenter_name: "DBaaS_Datacenter"
   - folder_name : "/vm/"
