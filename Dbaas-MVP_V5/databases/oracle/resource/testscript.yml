@@ -6,8 +6,8 @@
   tasks:
     - name: get the ip address
       set_fact:
-#        db_machine_ip: '{{ morpheus[''internalIp'']}}'
-         db_machine_ip: 192.168.9.136
+        db_machine_ip: '{{ morpheus[''internalIp'']}}'
+         #db_machine_ip: 192.168.9.136
     - name: add host
       add_host:
         hostname: "{{ db_machine_ip }}"
