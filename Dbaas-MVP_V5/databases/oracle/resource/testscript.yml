@@ -1,7 +1,7 @@
 ---
 - name: testing ansible playbook
-  hosts: all
-  connection: all
+  hosts: localhost
+
 
 #  vars:
 #    db_machine_ip: 10.3.40.196
