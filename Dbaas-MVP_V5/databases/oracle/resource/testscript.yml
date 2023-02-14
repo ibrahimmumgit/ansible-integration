@@ -18,7 +18,7 @@
         ansible_ssh_pass: P@ssw0rd123
         groups: [ 'si-test' ]
 - name: testing in target machine
-  hosts: '{{ morpheus[''internalIp'']}}'
+  hosts: all
   become: true
 #  vars:
 #    ansible_python_interpreter: "/usr/bin/python"
