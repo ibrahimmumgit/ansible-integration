@@ -4,21 +4,21 @@
 "cluster_name": edbclus13
 "compatible_mode": edb
 "cpu": 4
-"datacenter_name": DBaaS_Datacenter
-"datastore": DBaaSMgmt_DS2
-"db_name": dbName
+"datacenter_name": C3
+"datastore": datastore2
+"db_name": edbtest
 "db_size": 30
 "dynatune_profile": mixed
-"edb_repo": 'http://10.3.73.155/edb/edb.repo'
+"edb_repo": 'http://192.168.9.136/edb/edb.repo'
 "edb_version": 13
 "edb_sub_version": '13.4'
 "efm_dns_ip": 10.3.40.30
-"epel_repo": 'http://10.3.73.155/edb/epel.repo'
+"epel_repo": 'http://192.168.9.136/edb/epel.repo'
 "folder_name": /VMs/
 "input_password": password
 "lv_name": 'lv_edb{{ port_number }}'
 "memory": 16384
-"nodes": 2
+"nodes": 1
 "os_version": RHEL 7.8
 "pem_agent": false
 "pg_type": EPAS
@@ -28,7 +28,7 @@
 "public_key": ''
 "public_net": VM Network
 "replication_mode": performance
-"rhel_repo": 'http://10.3.73.155/edb/rhel_local.repo'
+"rhel_repo": 'http://192.168.9.136/edb/rhel_local.repo'
 "rollback": false
 "template_dict": { "RHEL 7.8": "RHEL-RAC-MK", "RHEL 8": "RHEL-OS-8" }
 "tenant_name": dbpaedb
@@ -36,9 +36,9 @@
 "number_of_luns": 1
 "vmware_cluster_name": DBaaS_Cluster
 "edb_audit_enable": ""
-"vcenter_ip": "10.3.40.100"
+"vcenter_ip": "192.168.9.70"
 "vcenter_username": "administrator@vsphere.local"
-"vcenter_password": "P@ssw0rd123"
+"vcenter_password": "VMware1!"
 "ansible_ssh_user": root
 "ansible_ssh_pass": P@ssw0rd123
 "pem_ip": 10.3.73.247
@@ -47,11 +47,11 @@
 "pem_pg_service": edb-as-13-cluster-5444
 "pg_pem_admin_user": pemadmin
 "pg_pem_admin_password": edb@13
-"TSIG_key_name": "nsupdate"
-"TSIG_key_secret": "SSEczLf3xst2ZY/i4GFXmQ=="
-"dns_server": "10.3.40.30"
-"domain_name": "gse.com"
-"forward_zone": "gse.com"
-"reverse_zone": "40.3.10.in-addr.arpa"
+#"TSIG_key_name": "nsupdate"
+#"TSIG_key_secret": "SSEczLf3xst2ZY/i4GFXmQ=="
+#"dns_server": "10.3.40.30"
+#"domain_name": "gse.com"
+#"forward_zone": "gse.com"
+#"reverse_zone": "40.3.10.in-addr.arpa"
 "barman_ip": 10.3.40.248
 "barman_pg_version": 13
