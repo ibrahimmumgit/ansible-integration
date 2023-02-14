@@ -1,6 +1,8 @@
 ---
 - name: Create a VM from a template
   hosts: localhost
+  vars_files:
+    - "./vars/edb_provision.yml"
   vars:
   - vm_name: "EDB_Deployed"
   - datacenter_name: "DBaaS_Datacenter"
@@ -317,6 +319,8 @@
 
 - name: Gather Disk facts and Add New Disk
   hosts: localhost
+  vars_files:
+    - "./vars/edb_provision.yml"
   vars:
     rollback: true
   tasks:
@@ -338,6 +342,8 @@
 
 - name: get disk names from host
   hosts: vmedbgroup
+  vars_files:
+    - "./vars/edb_provision.yml"
   vars:
     rollback: true
     ssh_user: enterprisedb
@@ -373,6 +379,8 @@
   
 - name: Configure fs,vgs and lvs
   hosts: vmedbgroup
+  vars_files:
+    - "./vars/edb_provision.yml"
   vars:
     rollback: true
     configure_host_disks: true
@@ -402,11 +410,15 @@
 
 - name: Extend vgs and lvs
   hosts: vmedbgroup
+  vars_files:
+    - "./vars/edb_provision.yml"
   roles:
   - role: hpe-oradb-vm-add-storage
 
 - name: Get New DBSize
   hosts: vmedbgroup
+  vars_files:
+    - "./vars/edb_provision.yml"
   tasks:
   - name: run df command 
     shell: df -h | grep "{{ vg_name }}" | tail -1 | awk '{print $2}'
@@ -440,6 +452,8 @@
 
 - name: EDB deployment
   hosts: primary,standby
+  vars_files:
+    - "./vars/edb_provision.yml"
   vars:
     edb_policy_file: "data/edb_policy.json"
     jsonInput: "{{ lookup('file', edb_policy_file) | from_json }}"
@@ -542,6 +556,8 @@
 
 - name: Snow fetch facts details of primary
   hosts: primary
+  vars_files:
+    - "./vars/edb_provision.yml"
   tasks:
   - block:
     - name: Get EPAS version
@@ -561,6 +577,8 @@
 
 - name: Pgpool2 vip generation
   hosts: pgpool2
+  vars_files:
+    - "./vars/edb_provision.yml"
   vars: 
     oracle_cluster_name: "{{pg_instance_name}}"
   tasks:
@@ -593,6 +611,8 @@
   
 - name: Enable Barman backup deployment
   hosts: primary,barmanserver,standby,pemserver,pgpool2
+  vars_files:
+    - "./vars/edb_provision.yml"
   gather_facts: yes
   become: yes
   vars:
