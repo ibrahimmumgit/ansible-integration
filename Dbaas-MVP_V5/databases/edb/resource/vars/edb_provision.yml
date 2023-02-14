@@ -23,7 +23,7 @@
 "pem_agent": false
 "pg_type": EPAS
 "pgpool_dev": ens192
-"pgpool_enable": true
+"pgpool_enable": false
 "port_number": 5444
 "public_key": ''
 "public_net": VM Network
