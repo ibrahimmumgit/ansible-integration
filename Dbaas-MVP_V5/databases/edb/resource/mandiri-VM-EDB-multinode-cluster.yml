@@ -28,6 +28,12 @@
     vars:
       type: int      
 
+  - name: Morpheus set fact
+    set_fact:
+      uuid: '{{ morpheus[''server''][''uniqueId'']}}'
+      vmname: '{{ morpheus[''server''][''name'']}}'
+      db_machine_ip: '{{ morpheus[''internalIp'']}}'
+
   - name: Get the hostname sequence
     tags: never
     set_fact:
@@ -43,9 +49,10 @@
     set_fact:
       compatible_mode: "{{compatible_mode}}"
       dynatune_profile: "{{dynatune_profile}}"
-      replication_mode: "{{replication_mode}}"      
+      replication_mode: "{{replication_mode}}"
 
   - name: VM template
+    tags: never
     set_fact:
       template_name: "{{item.value}}"
     when: item.key == os_version
