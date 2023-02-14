@@ -4,7 +4,7 @@
 "cluster_name": edbclus13
 "compatible_mode": edb
 "cpu": 4
-"datacenter_name": C3
+"datacenter_name": c3
 "datastore": datastore2
 "db_name": edbtest
 "db_size": 30
