@@ -1,13 +1,14 @@
 ---
 - name: testing ansible playbook
-  hosts: localhost
+  hosts: all
+  connection: local
 #  vars:
 #    db_machine_ip: 10.3.40.196
   tasks:
     - name: get the ip address
       set_fact:
-        #db_machine_ip: '{{ morpheus[''internalIp'']}}'
-        db_machine_ip: 192.168.9.134
+        db_machine_ip: '{{ morpheus[''internalIp'']}}'
+        #db_machine_ip: 192.168.9.134
     - debug:
         var: db_machine_ip
     - name: add host
