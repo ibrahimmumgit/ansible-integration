@@ -11,4 +11,19 @@
          #db_machine_ip: 192.168.9.136
     - debug:
         var: db_machine_ip
-
+    - name: add host
+      add_host:
+        hostname: "{{ db_machine_ip }}"
+        ansible_ssh_user: root
+        ansible_ssh_pass: P@ssw0rd123
+        groups: [ 'si-test' ]
+- name: testing in target machine
+  hosts: si-test
+  become: true
+#  vars:
+#    ansible_python_interpreter: "/usr/bin/python"
+  tasks:
+    - ansible.builtin.file:
+        path: /root/new_dir
+        state: directory
+        mode: '0755'
