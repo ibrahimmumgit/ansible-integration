@@ -171,6 +171,8 @@
         hostname: "{{  item.node_ip }}"
         vmname: "{{item.vmname}}"
         uuid: "{{ item.uuid }}"
+        ansible_ssh_user: "{{ ansible_ssh_user }}"
+        ansible_ssh_pass: "{{ ansible_ssh_pass }}"
         groups: [ 'vmedbgroup' ]
       with_items: "{{rac_nodes}}"
       ignore_errors: yes
