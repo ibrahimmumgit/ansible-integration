@@ -32,10 +32,12 @@
 
   - name: Morpheus set fact
     set_fact:
-      uuid: '42150010-ec64-9c78-2cfd-7efec904af98'
-      vmname: 'HPE-VM-DBAAS-001'
-      db_machine_ip: '192.168.9.137'
-
+      uuid: '{{ morpheus[''server''][''uniqueId'']}}'
+      vmname: '{{ morpheus[''server''][''name'']}}'
+      db_machine_ip: '{{ morpheus[''internalIp'']}}'
+      #uuid: '42150010-ec64-9c78-2cfd-7efec904af98'
+      #vmname: 'HPE-VM-DBAAS-001'
+      #db_machine_ip: '192.168.9.137'
 
   - name: Get the hostname sequence
     tags: never
