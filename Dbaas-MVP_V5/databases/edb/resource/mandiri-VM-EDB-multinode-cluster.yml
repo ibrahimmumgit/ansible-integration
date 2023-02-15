@@ -166,7 +166,8 @@
     - name: Removing entry from known_hosts if any
       known_hosts:
        name: "{{ item.node_ip }}"
-       path: /root/.ssh/known_hosts
+       #path: /root/.ssh/known_hosts
+       path: /opt/morpheus/.local/.ssh/known_hosts
        state: absent
       with_items: "{{rac_nodes}}"
       ignore_errors: yes
