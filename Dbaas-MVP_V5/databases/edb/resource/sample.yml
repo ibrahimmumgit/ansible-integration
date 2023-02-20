@@ -29,6 +29,8 @@
       var: db_size
   - debug:
       var: disk_number 
+      
+ - meta: end_play
 
 
   
