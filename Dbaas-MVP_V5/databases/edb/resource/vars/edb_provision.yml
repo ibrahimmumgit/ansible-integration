@@ -2,16 +2,16 @@
 "backup_policy": silver
 "barman": false
 "cluster_name": edbclus13
-"compatible_mode": edb
+"compatible_mode": "{{ morpheus['customOptions']['compatiblemode'] }}"
 "cpu": 4
 "datacenter_name": c3
 "datastore": datastore2
-"db_name": edbtest
-"db_size": 30
+"db_name": "{{ morpheus['customOptions']['DBName'] }}"
+"db_size": "{{ morpheus['customOptions']['pgdata_size'] }}"
 "dynatune_profile": mixed
 "edb_repo": 'http://192.168.9.136/edb/edb.repo'
-"edb_version": 13
-"edb_sub_version": '13.4'
+"edb_version": "{{ morpheus['customOptions']['edbversion'] }}"
+"edb_sub_version": "{{ morpheus['customOptions']['edb_subversion'] }}"
 "efm_dns_ip": 10.3.40.30
 "epel_repo": 'http://192.168.9.136/edb/epel.repo'
 "folder_name": /VMs/
@@ -33,7 +33,7 @@
 "template_dict": { "RHEL 7.8": "RHEL-RAC-MK", "RHEL 8": "RHEL-OS-8" }
 "tenant_name": dbpaedb
 "vg_name": 'vg_edb{{ port_number }}'
-"number_of_luns": 1
+"number_of_luns": "{{ morpheus['customOptions']['number_of_disks'] }}"
 "vmware_cluster_name": DBaaS_Cluster
 "edb_audit_enable": ""
 "vcenter_ip": "192.168.9.70"
