@@ -24,6 +24,34 @@
   - uuids_val: []
   - nodes: 1 
   tasks:
+  - name: Morpheus user input
+    set_fact:
+      compatible_mode: "{{ morpheus['customOptions']['compatiblemode'] }}"
+      db_name: "{{ morpheus['customOptions']['DBName'] }}"
+      dynatune_profile: "{{ morpheus['customOptions']['workloadprofile'] }}"
+      edb_version: "{{ morpheus['customOptions']['edbversion'] }}"
+      edb_sub_version: "{{ morpheus['customOptions']['edb_subversion'] }}"
+      input_password: "{{ morpheus['customOptions']['db_password'] }}"
+      db_size: "{{ morpheus['customOptions']['pgdata_size'] }}"
+      disk_number: "{{ morpheus['customOptions']['number_of_disks'] }}"
+    - debug:
+        var: compatible_mode
+    - debug:
+        var: db_name
+    - debug:
+        var: dynatune_profile
+    - debug:
+        var: edb_version
+    - debug:
+        var: input_password
+    - debug:
+        var: db_name
+    - debug:
+        var: db_size
+    - debug:
+        var: disk_number 
+  - meta: end_play
+  
   - name: Validate input parameters.
     include_role:
       name: hpe-validate-params
@@ -36,16 +64,7 @@
       vmname: '{{ morpheus[''server''][''name'']}}'
       db_machine_ip: '{{ morpheus[''internalIp'']}}'
 
-  - name: Morpheus user input
-    set_fact:
-      compatible_mode: "{{ morpheus['customOptions']['compatiblemode'] }}"
-      db_name: "{{ morpheus['customOptions']['DBName'] }}"
-      dynatune_profile: "{{ morpheus['customOptions']['workloadprofile'] }}"
-      edb_version: "{{ morpheus['customOptions']['edbversion'] }}"
-      edb_sub_version: "{{ morpheus['customOptions']['edb_subversion'] }}"
-      input_password: "{{ morpheus['customOptions']['db_password'] }}"
-      db_size: "{{ morpheus['customOptions']['pgdata_size'] }}"
-      disk_number: "{{ morpheus['customOptions']['number_of_disks'] }}"
+
 
   - name: Get the hostname sequence
     tags: never
