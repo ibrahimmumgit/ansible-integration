@@ -1,28 +1,7 @@
 ---
 - name: Create a VM from a template
   hosts: localhost
-  vars_files:
-    - "./vars/edb_provision.yml"
-  vars:
-  - vm_name: "EDB_Deployed"
-  - datacenter_name: "DBaaS_Datacenter"
-  - folder_name : "/vm/"
-  - cpu: 4
-  - memory: 8192
-  - vm_network: "VM Network"
-  - datastore: "DBaaSMgmt_DS2"
-  - vmware_cluster_name: "DBaaS_Cluster"
-  - ssh_user: "root"
-  - ssh_pass: "P@ssw0rd123"
-  - db_size: "30"
-  - disk_number: 1
-  - tenant_name: hpedbaas
-  - os_version: "RHEL 7.8"
-  - dict_list: { cpu: "{{ cpu }}", memory: "{{ memory}}", db_size: "{{ db_size}}", disk_number: "{{ disk_number }}" }
-  - template_dict: { "RHEL 7.8": "RHEL-RAC-MK", "RHEL 8": "RHEL-OS-8" }
-  - rollback: true
-  - uuids_val: []
-  - nodes: 1 
+
   tasks:
     - name: Morpheus user input
       set_fact:
