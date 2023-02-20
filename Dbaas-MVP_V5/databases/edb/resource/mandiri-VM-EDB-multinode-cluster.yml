@@ -14,8 +14,8 @@
   - vmware_cluster_name: "DBaaS_Cluster"
   - ssh_user: "root"
   - ssh_pass: "P@ssw0rd123"
-  #- db_size: "30"
-  #- disk_number: 1
+  - db_size: "30"
+  - disk_number: 1
   - tenant_name: hpedbaas
   - os_version: "RHEL 7.8"
   - dict_list: { cpu: "{{ cpu }}", memory: "{{ memory}}", db_size: "{{ db_size}}", disk_number: "{{ disk_number }}" }
@@ -24,16 +24,16 @@
   - uuids_val: []
   - nodes: 1 
   tasks:
-  - name: Morpheus user input
-    set_fact:
-      compatible_mode: "{{ morpheus['customOptions']['compatiblemode'] }}"
-      db_name: "{{ morpheus['customOptions']['DBName'] }}"
-      dynatune_profile: "{{ morpheus['customOptions']['workloadprofile'] }}"
-      edb_version: "{{ morpheus['customOptions']['edbversion'] }}"
-      edb_sub_version: "{{ morpheus['customOptions']['edb_subversion'] }}"
-      input_password: "{{ morpheus['customOptions']['db_password'] }}"
-      db_size: "{{ morpheus['customOptions']['pgdata_size'] }}"
-      disk_number: "{{ morpheus['customOptions']['number_of_disks'] }}"
+    - name: Morpheus user input
+      set_fact:
+        compatible_mode: "{{ morpheus['customOptions']['compatiblemode'] }}"
+        db_name: "{{ morpheus['customOptions']['DBName'] }}"
+        dynatune_profile: "{{ morpheus['customOptions']['workloadprofile'] }}"
+        edb_version: "{{ morpheus['customOptions']['edbversion'] }}"
+        edb_sub_version: "{{ morpheus['customOptions']['edb_subversion'] }}"
+        input_password: "{{ morpheus['customOptions']['db_password'] }}"
+        db_size: "{{ morpheus['customOptions']['pgdata_size'] }}"
+        disk_number: "{{ morpheus['customOptions']['number_of_disks'] }}"
     - debug:
         var: compatible_mode
     - debug:
