@@ -5,6 +5,6 @@
   tasks:
     - name: Add User
       set_fact:
-        name: "{{ morpheus['customOptions']['pgdata_size'] }}"
+        name: "hai"
     - debug:
         var: name
