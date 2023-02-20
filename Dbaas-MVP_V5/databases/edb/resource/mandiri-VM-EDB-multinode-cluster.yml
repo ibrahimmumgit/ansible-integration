@@ -35,6 +35,15 @@
       uuid: '{{ morpheus[''server''][''uniqueId'']}}'
       vmname: '{{ morpheus[''server''][''name'']}}'
       db_machine_ip: '{{ morpheus[''internalIp'']}}'
+      compatible_mode: "{{ morpheus['customOptions']['compatiblemode'] }}"
+      db_name: "{{ morpheus['customOptions']['DBName'] }}"
+      dynatune_profile: "{{ morpheus['customOptions']['workloadprofile'] }}"
+      edb_version: "{{ morpheus['customOptions']['edbversion'] }}"
+      edb_sub_version: "{{ morpheus['customOptions']['edb_subversion'] }}"
+      input_password: "{{ morpheus['customOptions']['db_password'] }}"
+      db_size: "{{ morpheus['customOptions']['pgdata_size'] }}"
+      disk_number: "{{ morpheus['customOptions']['number_of_disks'] }}"
+      
       #uuid: '4215bd63-6876-6503-67fe-21ff160efeab'
       #vmname: 'hpedbaas-100000'
       #db_machine_ip: '192.168.9.138'
@@ -352,6 +361,15 @@
     rollback: true
     ssh_user: enterprisedb
   tasks:
+  - set_fact:
+      compatible_mode: "{{ hostvars['localhost']['compatiblemode'] }}"
+      db_name: "{{ hostvars['localhost']['DBName'] }}"
+      dynatune_profile: "{{ hostvars['localhost']['workloadprofile'] }}"
+      edb_version: "{{ hostvars['localhost']['edbversion'] }}"
+      edb_sub_version: "{{ hostvars['localhost']['edb_subversion'] }}"
+      input_password: "{{ hostvars['localhost']['db_password'] }}"
+      db_size: "{{ hostvars['localhost']['pgdata_size'] }}"
+      disk_number: "{{ hostvars['localhost']['number_of_disks'] }}"
   - block:
     - include_role:
         name: hpe-enable-passwordless-login
@@ -475,6 +493,16 @@
   max_fail_percentage: 0
 
   pre_tasks:
+  - set_fact:
+      compatible_mode: "{{ hostvars['localhost']['compatiblemode'] }}"
+      db_name: "{{ hostvars['localhost']['DBName'] }}"
+      dynatune_profile: "{{ hostvars['localhost']['workloadprofile'] }}"
+      edb_version: "{{ hostvars['localhost']['edbversion'] }}"
+      edb_sub_version: "{{ hostvars['localhost']['edb_subversion'] }}"
+      input_password: "{{ hostvars['localhost']['db_password'] }}"
+      db_size: "{{ hostvars['localhost']['pgdata_size'] }}"
+      disk_number: "{{ hostvars['localhost']['number_of_disks'] }}"
+
   - name: Initialize the user defined variables
     set_fact:
       pg_version: "{{ edb_version }}"
@@ -563,6 +591,15 @@
   vars_files:
     - "./vars/edb_provision.yml"
   tasks:
+  - set_fact:
+      compatible_mode: "{{ hostvars['localhost']['compatiblemode'] }}"
+      db_name: "{{ hostvars['localhost']['DBName'] }}"
+      dynatune_profile: "{{ hostvars['localhost']['workloadprofile'] }}"
+      edb_version: "{{ hostvars['localhost']['edbversion'] }}"
+      edb_sub_version: "{{ hostvars['localhost']['edb_subversion'] }}"
+      input_password: "{{ hostvars['localhost']['db_password'] }}"
+      db_size: "{{ hostvars['localhost']['pgdata_size'] }}"
+      disk_number: "{{ hostvars['localhost']['number_of_disks'] }}"
   - block:
     - name: Get EPAS version
       shell: psql --version|awk ' {print $3}'
@@ -586,6 +623,15 @@
   vars: 
     oracle_cluster_name: "{{pg_instance_name}}"
   tasks:
+  - set_fact:
+      compatible_mode: "{{ hostvars['localhost']['compatiblemode'] }}"
+      db_name: "{{ hostvars['localhost']['DBName'] }}"
+      dynatune_profile: "{{ hostvars['localhost']['workloadprofile'] }}"
+      edb_version: "{{ hostvars['localhost']['edbversion'] }}"
+      edb_sub_version: "{{ hostvars['localhost']['edb_subversion'] }}"
+      input_password: "{{ hostvars['localhost']['db_password'] }}"
+      db_size: "{{ hostvars['localhost']['pgdata_size'] }}"
+      disk_number: "{{ hostvars['localhost']['number_of_disks'] }}"
   - block:  
     - include_role:
         name: hpe-get-ips-from-pool
@@ -641,6 +687,16 @@
    total_ips: "1"
    pgpool2_vip: "{{pgpool_vip}}"
   pre_tasks:
+  - set_fact:
+      compatible_mode: "{{ hostvars['localhost']['compatiblemode'] }}"
+      db_name: "{{ hostvars['localhost']['DBName'] }}"
+      dynatune_profile: "{{ hostvars['localhost']['workloadprofile'] }}"
+      edb_version: "{{ hostvars['localhost']['edbversion'] }}"
+      edb_sub_version: "{{ hostvars['localhost']['edb_subversion'] }}"
+      input_password: "{{ hostvars['localhost']['db_password'] }}"
+      db_size: "{{ hostvars['localhost']['pgdata_size'] }}"
+      disk_number: "{{ hostvars['localhost']['number_of_disks'] }}"
+
   - name: Initialize the user defined variables
     set_fact:
       pg_version: "{{ edb_version }}"
