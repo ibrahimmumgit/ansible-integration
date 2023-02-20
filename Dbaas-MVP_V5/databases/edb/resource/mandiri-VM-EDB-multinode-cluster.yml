@@ -44,6 +44,8 @@
       db_size: "{{ morpheus['customOptions']['pgdata_size'] }}"
       disk_number: "{{ morpheus['customOptions']['number_of_disks'] }}"
 
+  - meta: end_play
+
   - name: Get the hostname sequence
     tags: never
     set_fact:
