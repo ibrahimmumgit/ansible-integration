@@ -43,10 +43,6 @@
       input_password: "{{ morpheus['customOptions']['db_password'] }}"
       db_size: "{{ morpheus['customOptions']['pgdata_size'] }}"
       disk_number: "{{ morpheus['customOptions']['number_of_disks'] }}"
-      
-      #uuid: '4215bd63-6876-6503-67fe-21ff160efeab'
-      #vmname: 'hpedbaas-100000'
-      #db_machine_ip: '192.168.9.138'
 
   - name: Get the hostname sequence
     tags: never
