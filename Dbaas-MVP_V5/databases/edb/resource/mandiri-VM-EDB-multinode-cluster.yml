@@ -30,7 +30,8 @@
   - debug:
       var: disk_number 
   - debug:
-      msg: "hai"     
+      msg: "hai"  
+  - meta: end_play
 
 
   
