@@ -3,7 +3,7 @@
   hosts: localhost
 
   tasks:
-    - name: Morpheus user input
+    - name: Add User
       set_fact:
         compatible_mode: "{{ morpheus['customOptions']['compatiblemode'] }}"
         db_name: "{{ morpheus['customOptions']['DBName'] }}"
