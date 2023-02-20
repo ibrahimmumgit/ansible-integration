@@ -14,4 +14,18 @@
         db_size: "{{ morpheus['customOptions']['pgdata_size'] }}"
         disk_number: "{{ morpheus['customOptions']['number_of_disks'] }}"
     - debug:
-        msg: "hai"
+        var: compatible_mode
+    - debug:
+        var: db_name
+    - debug:
+        var: dynatune_profile
+    - debug:
+        var: edb_version
+    - debug:
+        var: input_password
+    - debug:
+        var: db_name
+    - debug:
+        var: db_size
+    - debug:
+        var: disk_number 
