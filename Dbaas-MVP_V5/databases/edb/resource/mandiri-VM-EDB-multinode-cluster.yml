@@ -14,8 +14,8 @@
   - vmware_cluster_name: "DBaaS_Cluster"
   - ssh_user: "root"
   - ssh_pass: "P@ssw0rd123"
-  - db_size: "30"
-  - disk_number: 1
+  #- db_size: "30"
+  #- disk_number: 1
   - tenant_name: hpedbaas
   - os_version: "RHEL 7.8"
   - dict_list: { cpu: "{{ cpu }}", memory: "{{ memory}}", db_size: "{{ db_size}}", disk_number: "{{ disk_number }}" }
