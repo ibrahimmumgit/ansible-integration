@@ -29,7 +29,8 @@
       var: db_size
   - debug:
       var: disk_number 
-      
+   - debug:
+      msg: "hai"     
  - meta: end_play
 
 
