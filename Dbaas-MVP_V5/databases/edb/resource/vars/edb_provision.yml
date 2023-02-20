@@ -8,14 +8,14 @@
 "datastore": datastore2
 "db_name": "{{ morpheus['customOptions']['DBName'] }}"
 "db_size": "{{ morpheus['customOptions']['pgdata_size'] }}"
-"dynatune_profile": mixed
+"dynatune_profile": "{{ morpheus['customOptions']['workloadprofile'] }}"
 "edb_repo": 'http://192.168.9.136/edb/edb.repo'
 "edb_version": "{{ morpheus['customOptions']['edbversion'] }}"
 "edb_sub_version": "{{ morpheus['customOptions']['edb_subversion'] }}"
 "efm_dns_ip": 10.3.40.30
 "epel_repo": 'http://192.168.9.136/edb/epel.repo'
 "folder_name": /VMs/
-"input_password": password
+"input_password": "{{ morpheus['customOptions']['db_password'] }}"
 "lv_name": 'lv_edb{{ port_number }}'
 "memory": 16384
 "nodes": 1
