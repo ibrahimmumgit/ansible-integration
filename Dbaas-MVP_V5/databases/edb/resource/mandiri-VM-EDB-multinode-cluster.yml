@@ -30,11 +30,14 @@
     vars:
       type: int      
 
-  - name: Morpheus set fact
+  - name: Morpheus server fact
     set_fact:
-      #uuid: '{{ morpheus[''server''][''uniqueId'']}}'
-      #vmname: '{{ morpheus[''server''][''name'']}}'
-      #db_machine_ip: '{{ morpheus[''internalIp'']}}'
+      uuid: '{{ morpheus[''server''][''uniqueId'']}}'
+      vmname: '{{ morpheus[''server''][''name'']}}'
+      db_machine_ip: '{{ morpheus[''internalIp'']}}'
+
+  - name: Morpheus user input
+    set_fact:
       compatible_mode: "{{ morpheus['customOptions']['compatiblemode'] }}"
       db_name: "{{ morpheus['customOptions']['DBName'] }}"
       dynatune_profile: "{{ morpheus['customOptions']['workloadprofile'] }}"
@@ -43,8 +46,6 @@
       input_password: "{{ morpheus['customOptions']['db_password'] }}"
       db_size: "{{ morpheus['customOptions']['pgdata_size'] }}"
       disk_number: "{{ morpheus['customOptions']['number_of_disks'] }}"
-
-  - meta: end_play
 
   - name: Get the hostname sequence
     tags: never
