@@ -32,9 +32,9 @@
 
   - name: Morpheus set fact
     set_fact:
-      uuid: '{{ morpheus[''server''][''uniqueId'']}}'
-      vmname: '{{ morpheus[''server''][''name'']}}'
-      db_machine_ip: '{{ morpheus[''internalIp'']}}'
+      #uuid: '{{ morpheus[''server''][''uniqueId'']}}'
+      #vmname: '{{ morpheus[''server''][''name'']}}'
+      #db_machine_ip: '{{ morpheus[''internalIp'']}}'
       compatible_mode: "{{ morpheus['customOptions']['compatiblemode'] }}"
       db_name: "{{ morpheus['customOptions']['DBName'] }}"
       dynatune_profile: "{{ morpheus['customOptions']['workloadprofile'] }}"
