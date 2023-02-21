@@ -5,14 +5,14 @@
   tasks:
   - name: Morpheus Fact
     set_fact:
-      compatible_mode: "{{ morpheus['customOptions']['compatiblemode'] }}"
-      db_name: "{{ morpheus['customOptions']['DBName'] }}"
-      dynatune_profile: "{{ morpheus['customOptions']['workloadprofile'] }}"
-      edb_version: "{{ morpheus['customOptions']['edbversion'] }}"
-      edb_sub_version: "{{ morpheus['customOptions']['edb_subversion'] }}"
-      input_password: "{{ morpheus['customOptions']['db_password'] }}"
-      db_size: "{{ morpheus['customOptions']['pgdata_size'] }}"
-      disk_number: "{{ morpheus['customOptions']['number_of_disks'] }}"
+      compatible_mode: '{{ morpheus[''customOptions''][''compatiblemode'']}}'
+      db_name: '{{ morpheus[''customOptions''][''DBName'']}}'
+      dynatune_profile: '{{ morpheus[''customOptions''][''workloadprofile'']}}'
+      edb_version: '{{ morpheus[''customOptions''][''edbversion'']}}'
+      edb_sub_version: '{{ morpheus[''customOptions''][''edb_subversion'']}}'
+      input_password: '{{ morpheus[''customOptions''][''db_password'']}}'
+      db_size: '{{ morpheus[''customOptions''][''pgdata_size'']}}'
+      disk_number: '{{ morpheus[''customOptions''][''number_of_disks'']}}'
   - debug:
       var: compatible_mode
   - debug:
