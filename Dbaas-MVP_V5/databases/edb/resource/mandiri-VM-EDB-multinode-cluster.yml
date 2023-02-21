@@ -1,7 +1,8 @@
 ---
 - name: Create a VM from a template
   hosts: localhost
-
+  vars_files:
+    - "./vars/edb_provision.yml"
   tasks:
   - name: Morpheus Fact
     set_fact:
