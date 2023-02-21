@@ -33,7 +33,7 @@
   - debug:
       msg: "hai"  
   - debug:
-      var: ansible_ssh_user
+      var: ansible_ssh_pass
 
   
   - meta: end_play
