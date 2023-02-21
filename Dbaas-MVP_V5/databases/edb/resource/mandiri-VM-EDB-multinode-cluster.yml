@@ -33,11 +33,11 @@
       msg: "hai"  
 
 
-  - name: Validate input parameters.
-    include_role:
-      name: hpe-validate-params
-    vars:
-      type: int         
+  #- name: Validate input parameters.
+  #  include_role:
+  #    name: hpe-validate-params
+  #  vars:
+  #    type: int         
 
   - name: Morpheus server fact
     set_fact:
