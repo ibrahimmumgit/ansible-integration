@@ -36,8 +36,8 @@
       var: ansible_ssh_pass
   - name: Adding db vm to inventory
     add_host:
-      hostname: "DBAASTEST005"
-      vmname: "192.168.9.200"
+      #hostname: "DBAASTEST005"
+      hostname: "192.168.9.200"
       uuid: "4215d41f-e780-a5ee-4b4b-b6ccee65b615"
       ansible_ssh_user: "{{ ansible_ssh_user }}"
       ansible_ssh_pass: "{{ ansible_ssh_pass }}"
