@@ -32,6 +32,10 @@
       var: disk_number 
   - debug:
       msg: "hai"  
+  - debug:
+      var: ansible_ssh_user
+  
+  - meta: end_play
 
 
   #- name: Validate input parameters.
