@@ -35,7 +35,7 @@
   - debug:
       var: ansible_ssh_user
    - debug:
-      var: ansible_ssh_password
+      var: ansible_ssh_pass 
   
   - meta: end_play
 
