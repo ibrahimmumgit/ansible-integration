@@ -34,6 +34,8 @@
       msg: "hai"  
   - debug:
       var: ansible_ssh_user
+   - debug:
+      var: ansible_ssh_password
   
   - meta: end_play
 
