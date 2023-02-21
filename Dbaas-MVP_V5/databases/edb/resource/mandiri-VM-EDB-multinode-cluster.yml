@@ -47,7 +47,7 @@
     ignore_errors: yes
     
 - name: get disk names from host
-  hosts: vmedbgroup
+  hosts: all
   tasks:
     - name: Testing the provisoned node
       shell: hostname
