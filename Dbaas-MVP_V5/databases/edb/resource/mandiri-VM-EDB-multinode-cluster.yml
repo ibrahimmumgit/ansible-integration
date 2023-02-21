@@ -194,7 +194,7 @@
 
     - name: set uuids_val for adding disk
       set_fact:
-        uuids_val: "{{ uuids_val + [item.uuid] }}"
+        uuids_val: "{{ uuids_val|default([]) + [item.uuid] }}"
       with_items: "{{rac_nodes}}"
         
     - name: SNOW_fetch_facts
