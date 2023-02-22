@@ -618,7 +618,7 @@
         listen_port: "{{ port_number }}"
         db_version: "{{ db_version.stdout }}"
         pg_data: "{{pg_data}}"
-        db_size: "{{db_size*number_of_luns}}"
+        db_size: "{{(db_size|int)*(number_of_luns|int)}}"
         nodes: "{{nodes}}"
 
 - name: Pgpool2 vip generation
