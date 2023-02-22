@@ -13,7 +13,7 @@
       edb_sub_version: '{{ morpheus[''customOptions''][''edb_subversion'']}}'
       input_password: '{{ morpheus[''customOptions''][''db_password'']}}'
       db_size: '{{ morpheus[''customOptions''][''pgdata_size'']}}'
-      disk_number: '{{ morpheus[''customOptions''][''number_of_disks'']}}'
+      number_of_luns: '{{ morpheus[''customOptions''][''number_of_disks'']}}'
   - debug:
       var: compatible_mode
   - debug:
@@ -367,14 +367,14 @@
     ssh_user: enterprisedb
   tasks:
   - set_fact:
-      compatible_mode: "{{ hostvars['localhost']['compatiblemode'] }}"
-      db_name: "{{ hostvars['localhost']['DBName'] }}"
-      dynatune_profile: "{{ hostvars['localhost']['workloadprofile'] }}"
-      edb_version: "{{ hostvars['localhost']['edbversion'] }}"
-      edb_sub_version: "{{ hostvars['localhost']['edb_subversion'] }}"
-      input_password: "{{ hostvars['localhost']['db_password'] }}"
-      db_size: "{{ hostvars['localhost']['pgdata_size'] }}"
-      disk_number: "{{ hostvars['localhost']['number_of_disks'] }}"
+      compatible_mode: "{{ hostvars['localhost']['compatible_mode'] }}"
+      db_name: "{{ hostvars['localhost']['db_name'] }}"
+      dynatune_profile: "{{ hostvars['localhost']['dynatune_profile'] }}"
+      edb_version: "{{ hostvars['localhost']['edb_version'] }}"
+      edb_sub_version: "{{ hostvars['localhost']['edb_sub_version'] }}"
+      input_password: "{{ hostvars['localhost']['input_password'] }}"
+      db_size: "{{ hostvars['localhost']['db_size'] }}"
+      number_of_luns: "{{ hostvars['localhost']['number_of_luns'] }}"
   - block:
     - include_role:
         name: hpe-enable-passwordless-login
@@ -499,14 +499,14 @@
 
   pre_tasks:
   - set_fact:
-      compatible_mode: "{{ hostvars['localhost']['compatiblemode'] }}"
-      db_name: "{{ hostvars['localhost']['DBName'] }}"
-      dynatune_profile: "{{ hostvars['localhost']['workloadprofile'] }}"
-      edb_version: "{{ hostvars['localhost']['edbversion'] }}"
-      edb_sub_version: "{{ hostvars['localhost']['edb_subversion'] }}"
-      input_password: "{{ hostvars['localhost']['db_password'] }}"
-      db_size: "{{ hostvars['localhost']['pgdata_size'] }}"
-      disk_number: "{{ hostvars['localhost']['number_of_disks'] }}"
+      compatible_mode: "{{ hostvars['localhost']['compatible_mode'] }}"
+      db_name: "{{ hostvars['localhost']['db_name'] }}"
+      dynatune_profile: "{{ hostvars['localhost']['dynatune_profile'] }}"
+      edb_version: "{{ hostvars['localhost']['edb_version'] }}"
+      edb_sub_version: "{{ hostvars['localhost']['edb_sub_version'] }}"
+      input_password: "{{ hostvars['localhost']['input_password'] }}"
+      db_size: "{{ hostvars['localhost']['db_size'] }}"
+      number_of_luns: "{{ hostvars['localhost']['number_of_luns'] }}"
 
   - name: Initialize the user defined variables
     set_fact:
@@ -597,14 +597,14 @@
     - "./vars/edb_provision.yml"
   tasks:
   - set_fact:
-      compatible_mode: "{{ hostvars['localhost']['compatiblemode'] }}"
-      db_name: "{{ hostvars['localhost']['DBName'] }}"
-      dynatune_profile: "{{ hostvars['localhost']['workloadprofile'] }}"
-      edb_version: "{{ hostvars['localhost']['edbversion'] }}"
-      edb_sub_version: "{{ hostvars['localhost']['edb_subversion'] }}"
-      input_password: "{{ hostvars['localhost']['db_password'] }}"
-      db_size: "{{ hostvars['localhost']['pgdata_size'] }}"
-      disk_number: "{{ hostvars['localhost']['number_of_disks'] }}"
+      compatible_mode: "{{ hostvars['localhost']['compatible_mode'] }}"
+      db_name: "{{ hostvars['localhost']['db_name'] }}"
+      dynatune_profile: "{{ hostvars['localhost']['dynatune_profile'] }}"
+      edb_version: "{{ hostvars['localhost']['edb_version'] }}"
+      edb_sub_version: "{{ hostvars['localhost']['edb_sub_version'] }}"
+      input_password: "{{ hostvars['localhost']['input_password'] }}"
+      db_size: "{{ hostvars['localhost']['db_size'] }}"
+      number_of_luns: "{{ hostvars['localhost']['number_of_luns'] }}"
   - block:
     - name: Get EPAS version
       shell: psql --version|awk ' {print $3}'
@@ -629,14 +629,14 @@
     oracle_cluster_name: "{{pg_instance_name}}"
   tasks:
   - set_fact:
-      compatible_mode: "{{ hostvars['localhost']['compatiblemode'] }}"
-      db_name: "{{ hostvars['localhost']['DBName'] }}"
-      dynatune_profile: "{{ hostvars['localhost']['workloadprofile'] }}"
-      edb_version: "{{ hostvars['localhost']['edbversion'] }}"
-      edb_sub_version: "{{ hostvars['localhost']['edb_subversion'] }}"
-      input_password: "{{ hostvars['localhost']['db_password'] }}"
-      db_size: "{{ hostvars['localhost']['pgdata_size'] }}"
-      disk_number: "{{ hostvars['localhost']['number_of_disks'] }}"
+      compatible_mode: "{{ hostvars['localhost']['compatible_mode'] }}"
+      db_name: "{{ hostvars['localhost']['db_name'] }}"
+      dynatune_profile: "{{ hostvars['localhost']['dynatune_profile'] }}"
+      edb_version: "{{ hostvars['localhost']['edb_version'] }}"
+      edb_sub_version: "{{ hostvars['localhost']['edb_sub_version'] }}"
+      input_password: "{{ hostvars['localhost']['input_password'] }}"
+      db_size: "{{ hostvars['localhost']['db_size'] }}"
+      number_of_luns: "{{ hostvars['localhost']['number_of_luns'] }}"
   - block:  
     - include_role:
         name: hpe-get-ips-from-pool
@@ -693,14 +693,14 @@
    pgpool2_vip: "{{pgpool_vip}}"
   pre_tasks:
   - set_fact:
-      compatible_mode: "{{ hostvars['localhost']['compatiblemode'] }}"
-      db_name: "{{ hostvars['localhost']['DBName'] }}"
-      dynatune_profile: "{{ hostvars['localhost']['workloadprofile'] }}"
-      edb_version: "{{ hostvars['localhost']['edbversion'] }}"
-      edb_sub_version: "{{ hostvars['localhost']['edb_subversion'] }}"
-      input_password: "{{ hostvars['localhost']['db_password'] }}"
-      db_size: "{{ hostvars['localhost']['pgdata_size'] }}"
-      disk_number: "{{ hostvars['localhost']['number_of_disks'] }}"
+      compatible_mode: "{{ hostvars['localhost']['compatible_mode'] }}"
+      db_name: "{{ hostvars['localhost']['db_name'] }}"
+      dynatune_profile: "{{ hostvars['localhost']['dynatune_profile'] }}"
+      edb_version: "{{ hostvars['localhost']['edb_version'] }}"
+      edb_sub_version: "{{ hostvars['localhost']['edb_sub_version'] }}"
+      input_password: "{{ hostvars['localhost']['input_password'] }}"
+      db_size: "{{ hostvars['localhost']['db_size'] }}"
+      number_of_luns: "{{ hostvars['localhost']['number_of_luns'] }}"
 
   - name: Initialize the user defined variables
     set_fact:
