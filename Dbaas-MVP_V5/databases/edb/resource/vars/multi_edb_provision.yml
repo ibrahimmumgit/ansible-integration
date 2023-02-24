@@ -47,11 +47,11 @@
 "pem_pg_service": edb-as-13-cluster-5444
 "pg_pem_admin_user": pemadmin
 "pg_pem_admin_password": edb@13
-#"TSIG_key_name": "nsupdate"
-#"TSIG_key_secret": "SSEczLf3xst2ZY/i4GFXmQ=="
-#"dns_server": "10.3.40.30"
-#"domain_name": "gse.com"
-#"forward_zone": "gse.com"
-#"reverse_zone": "40.3.10.in-addr.arpa"
+"TSIG_key_name": "nsupdate"
+"TSIG_key_secret": "qsiGQ/YHB75z2Hu3dBva7w=="
+"dns_server": "192.168.9.136"
+"domain_name": "dbpaas.com"
+"forward_zone": "dbpaas.com"
+"reverse_zone": "9.168.192.in-addr.arpa"
 "barman_ip": 10.3.40.248
 "barman_pg_version": 13
