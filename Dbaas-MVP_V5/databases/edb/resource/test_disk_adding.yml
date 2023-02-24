@@ -1,0 +1,16 @@
+---
+- name: Create a VM from a template
+  hosts: localhost
+  tasks:
+    - name: Gather disk info from virtual machine using name
+      community.vmware.vmware_guest_disk_info:
+        hostname: "192.168.9.70"
+        username: "administrator@vsphere.local"
+        password: "VMware1!"
+        datacenter: c3
+        name: hpedbaas-100101
+      delegate_to: localhost
+      register: disk_info
+
+    - debug:
+       var: disk_info
