@@ -1,0 +1,30 @@
+   - name: set fact for vmname value
+     set_fact:
+       vmname_val: "{{ item }}"
+     
+   - name: Gather disk facts from virtual machine using UUID
+     vmware_guest_disk_info:
+       hostname: "{{ vcenter_ip }}"
+       username: "{{ vcenter_username }}"
+       password: "{{ vcenter_password }}"
+       datacenter: "{{ datacenter_name }}"
+       validate_certs: no
+       name: "{{ vmname_val }}"
+     register: disk_facts
+     
+   - debug:
+       var: disk_facts
+     
+   - name: List the unit numbers
+     set_fact:
+       unit_numbers: "{{unit_numbers|default([]) + [item.value.unit_number| int] }}"
+     with_items: "{{ disk_facts.guest_disk_info|dict2items }}"
+     
+   - set_fact:
+       unit_number: "{{ unit_numbers | max }} "
+       new_unit_numbers: []
+    
+   - name: Adding disk
+     include_tasks: mn_vm_adding_disk.yml
+     with_sequence: start=1 end="{{number_of_luns}}"
+     when: db_size | int > 0
