@@ -9,6 +9,7 @@
         password: "VMware1!"
         datacenter: c3
         name: hpedbaas-100101
+        validate_certs: false
       delegate_to: localhost
       register: disk_info
 
