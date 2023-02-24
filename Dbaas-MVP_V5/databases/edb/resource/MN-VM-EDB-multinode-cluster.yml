@@ -164,12 +164,17 @@
       set_fact:
         uuids_val: "{{ uuids_val|default([]) + [item.uuid] }}"
       with_items: "{{rac_nodes}}"
-        
+
+    - name: set vmname for adding disk
+      set_fact:
+        vmname_list: "{{ vmname_list|default([]) + [item.vmname] }}"
+      with_items: "{{rac_nodes}}"
+
     - name: SNOW_fetch_facts
       set_fact:
         replication_type: asynchronous
       when: replication_mode=="performance"
-      
+
     - name: SNOW_fetch_facts
       set_fact:
         replication_type: synchronous
@@ -310,8 +315,8 @@
 
   - block:
     - name: include task for adding
-      include_tasks: edb_extend_disk_multiple.yml
-      loop: "{{ uuids_val }}"
+      include_tasks: mn_edb_extend_disk_multiple.yml
+      loop: "{{ vmname_list }}"
     rescue:
     - name: Delete VM
       include_role:
