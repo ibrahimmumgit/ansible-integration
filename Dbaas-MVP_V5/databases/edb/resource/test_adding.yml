@@ -1,0 +1,38 @@
+---
+- name: Create a VM from a template
+  hosts: localhost
+  vars_files:
+    - "./vars/multi_edb_provision.yml"
+  tasks:
+    - set_fact:
+        # Excluding '7' as it is reserved for SCSI Controller
+        unit_number: "1"
+        datastore: datastore2
+        db_size: 10
+        uuid_val: "4215feac-3b90-2058-5ac2-3fa2a258802a"
+        
+    - name: Adding disk
+      vmware_guest_disk:
+        hostname: "{{ vcenter_ip }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        datacenter: "{{ datacenter_name }}"
+        validate_certs: no
+        uuid: "{{ uuid_val }}"
+        disk:
+          - size_gb: "{{ db_size | int }}"
+            type: thin
+            datastore: "{{ datastore }}"
+            state: present
+            scsi_controller: 0
+            unit_number: "{{ unit_number }}"
+            scsi_type: 'paravirtual'
+            disk_mode: 'persistent'
+      register: disk_facts
+      when: db_size | int > 0
+
+    - set_fact:
+        new_unit_numbers: "{{new_unit_numbers|default([]) + [unit_number| int] }}"
+      when: db_size | int > 0
+
+    - debug: msg={{ new_unit_numbers }}
