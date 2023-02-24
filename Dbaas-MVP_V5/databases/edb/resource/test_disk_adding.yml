@@ -2,17 +2,26 @@
 - name: Create a VM from a template
   hosts: localhost
   tasks:
-    - name: Gather one specific VM
-      community.vmware.vmware_vm_info:
-        hostname: "192.168.9.70"
-        username: "administrator@vsphere.local"
-        password: "VMware1!"
-        vm_name: 'hpedbaas-100101'
-      delegate_to: localhost
-      register: vm_info
+    - name: Get UUID from given VM Name
+      block:
+        - name: Get virtual machine info
+          vmware_vm_info:
+            hostname: '192.168.9.70'
+            username: 'administrator@vsphere.local'
+            password: 'VMware1!'
+            folder: "/c3/vm/"
+          delegate_to: localhost
+          register: vm_info
 
-    - debug:
-       var: vm_info
+        - debug:
+            msg: "{{ item.uuid }}"
+          with_items:
+            - "{{ vm_info.virtual_machines | json_query(query) }}"
+          vars:
+            query: "[?guest_name=='hpedbaas-100101']"
+
+    #- debug:
+    #   var: vm_info
 
     #- name: Gather disk info from virtual machine using name
     #  community.vmware.vmware_guest_disk_info:
