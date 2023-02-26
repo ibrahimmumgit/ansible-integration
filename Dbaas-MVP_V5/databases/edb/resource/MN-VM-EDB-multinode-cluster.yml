@@ -4,7 +4,7 @@
   vars_files:
     - "./vars/multi_edb_provision.yml"
   vars:
-  - prov_vmdetails: [ {vmname: hpedbaas-100101, uuid: 4215810b-e7b4-544f-81b5-5197a7500a0, ipaddress: 192.168.9.137}, { vmname: hpedbaas-100102, uuid: 42156f1c-89e4-4a27-a6cb-ce852be93e3e, ipaddress: 192.168.9.140} ]
+  - prov_vmdetails: [ {vmname: hpedbaas-100101, uuid: 42155497-5002-343f-72ac-ba75ac97907a, ipaddress: 192.168.9.134}, { vmname: hpedbaas-100102, uuid: 4215433a-eeef-cbcf-7731-8755f2e3422c, ipaddress: 192.168.9.139} ]
   tasks:
   #- name: Validate input parameters.
   #  include_role:
@@ -146,7 +146,8 @@
     - name: Removing entry from known_hosts if any
       known_hosts:
        name: "{{ item.node_ip }}"
-       path: /root/.ssh/known_hosts
+       path: /opt/morpheus/.local/.ssh/known_hosts
+       #path: /root/.ssh/known_hosts
        state: absent
       with_items: "{{rac_nodes}}"
       ignore_errors: yes
