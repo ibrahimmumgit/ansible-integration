@@ -1,8 +1,6 @@
 ---
 - name: Create OLVM using template info
   hosts: localhost
-  become: yes
-  become_method: sudo
   gather_facts: false
   vars:
     - cluster_name: "OELCLUS1"
