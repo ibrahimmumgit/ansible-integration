@@ -1,17 +1,18 @@
 ---
-- name: Create a VM from a template
+- name: get vm details
   hosts: localhost
-
   tasks:
-  - name: Morpheus server fact
-    set_fact:
-      uuid: '{{ morpheus[''server''][''uniqueId'']}}'
-      vmname: '{{ morpheus[''server''][''name'']}}'
-      db_machine_ip: '{{ morpheus[''internalIp'']}}'
-  - debug:
-      var: uuid
-  - debug:
-      var: vmname
-  - debug:
-      var: db_machine_ip
+    - name: gather vm information
+      community.vmware.vmware_guest_info:
+        hostname: "192.168.9.70"
+        username: "administrator@vsphere.local"
+        password: "VMware1!"
+        datacenter: c3
+        name: hpedbaas-100102
+        validate_certs: false
+      delegate_to: localhost
+      register: info
+    - name: print the values
+      debug:
+        msg: "{{ info }}"
   
