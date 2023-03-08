@@ -1,2 +1,6 @@
-- debug:
-    msg: "hai"
+- name: Obtain SSO token
+  ovirt_auth:
+    url: "'https://10.3.40.48/ovirt-engine/api"
+    username: "admin@internal"
+    password: "P@ssw0rd123" 
+    hostname: "hpedbass"
