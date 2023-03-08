@@ -5,5 +5,5 @@
     - name: import role
       import_role: 
         name: OLVM
-        tasks_from: olvm-provision-si-database.yml
+        tasks_from: olvm.yml
       
