@@ -1,0 +1,238 @@
+---
+- name: Create OLVM using template info
+  hosts: localhost
+  become: yes
+  become_method: sudo
+  gather_facts: false
+  vars:
+    - cluster_name: "OELCLUS1"
+    - template_name: "olvm-VMSI-18c-template"
+    - operating_system: "Oracle Linux 7.x x64"
+    - olvm_url: 'https://10.3.40.48/ovirt-engine/api'
+    - olvm_username: "admin@internal"
+    - olvm_password: "P@ssw0rd123"
+    - tenant_name: hpedbaas
+    - memory_mb: '16384 MiB'
+    - cpu: '2'    
+    - disk_number: '1'
+    - storage_disk: 20
+    - storage_domain: 'DATALUN1' 
+    - template_dict:
+        centos78: { 18.3.0.0: olvm-VMSI-18c-template, 19.3.0.0: olvm-19c-VMSI-template }
+        redhat78: { 18.3.0.0: olvm-VMSI-18c-template, 19.3.0.0: olvm-19c-VMSI-template }
+  tasks:
+  - name: Generate random sequence vm_name
+    set_fact:
+      vmname: "{{tenant_name}}-{{lookup('password','/dev/null chars=digits length=6')}}"
+      
+  - name: Obtain SSO token
+    ovirt_auth:
+      url: "{{ olvm_url }}"
+      username: "{{ olvm_username }}"
+      password: "{{ olvm_password }}" 
+      hostname: "{{ vmname }}"
+  
+  - name: Clone VM from template
+    ovirt_vm:
+      auth: "{{ ovirt_auth }}"
+      state: running
+      name: "{{ vmname }}"
+      cluster: "{{ cluster_name }}"
+      template: "{{ template_name }}"
+      cpu_cores: "{{ cpu }}"  
+      memory: "{{ memory_mb }}"
+      high_availability: true
+      operating_system: "{{ operating_system }}"      
+      next_run: false    
+    register: result
+
+  - name: SNOW_fetch_facts
+    set_fact:
+      vmname: "{{ vmname }}" 
+      storage_domain: "{{ storage_domain }}"
+      storage_disk: "{{ storage_disk }}"
+    
+- name: Gather Disk facts and Add New Disk
+  hosts: localhost
+  vars:
+    - vm_infra_wait_for_ip_retries: 30
+    - vm_infra_wait_for_ip_delay: 10
+    - wait_for_ip_version: v4
+    - wait_for_ip_range: "0.0.0.0/0"
+    - template_disk_interface: virtio_scsi
+    - disk_size: 10GiB
+    - rollback: true
+  tasks:
+  - block: 
+    - name: Gather disk_facts using VM_details
+      ovirt_vm_info:
+        auth: "{{ ovirt_auth }}"
+        pattern: "{{ vmname }}"
+        fetch_nested: true
+        nested_attributes: ips
+      with_items:
+        - "{{ result }}"
+      until: "vm_info.ovirt_vms | ovirt.ovirt.ovirtvmip{{ wait_for_ip_version }}(network_ip='{{ wait_for_ip_range }}') | length > 0"
+      retries: "{{ vm_infra_wait_for_ip_retries }}"
+      register: vm_info
+      delay: "{{ vm_infra_wait_for_ip_delay }}"
+
+    - debug:
+        msg: "{{ vm_info.results[0] }}"
+
+    - set_fact:
+        db_ipv4_address: "{{ vm_info.results[0].ovirt_vms[0].reported_devices[0].ips[0].address }}"
+
+    - set_fact:
+        uuid: "{{ vm_info.results[0].item.id }}"
+        
+    - set_fact:    
+        disk_attachment: "{{ vm_info.results[0].ovirt_vms[0].disk_attachments }}"
+      
+    - name: SNOW_fetch_facts
+      set_fact:
+        db_ipv4_address: "{{ db_ipv4_address }}"
+        uuid: "{{ uuid }}"
+        storage_domain: "{{ storage_domain }}"
+        
+    - name: Removing entry from known_hosts if any
+      known_hosts:
+        name: "{{ db_ipv4_address }}"
+        path: /root/.ssh/known_hosts
+        state: absent
+
+    - name: Adding db vm to inventory
+      add_host:
+        hostname: "{{ db_ipv4_address }}"
+        ansible_hostname: "{{ vmname }}"
+        vmname: "{{ vmname }}"
+        groups: ['vmnewgroup']           
+    
+    - set_fact:
+        unit_number: "{{ disk_attachment | length }}"
+    
+    - set_fact:
+        new_unit_numbers: []
+     
+    - name: Adding Disk
+      include_tasks: olvm_disk.yml
+      with_sequence: start=1 end="{{disk_number}}"
+   
+- name: Get disk names from host
+  hosts: vmnewgroup
+  vars:
+    rollback: true
+    
+  tasks:
+  - block:
+    - include_role:
+        name: hpe-enable-passwordless-login
+        
+    - set_fact:
+        new_unit_numbers: "{{ hostvars['localhost']['new_unit_numbers'] }}"
+        
+    - name: shell
+      shell: ls -d /sys/block/sd*/device/scsi_device/* |awk -F '[:/]' '{print "/dev/"$4,$9}' | grep "sdb" | cut -f1 -d " "
+      ignore_errors: yes      
+      register: disk_names
+
+    - debug:
+        msg: "{{ disk_names.stdout_lines }}"
+    
+    - set_fact:
+        db_disks: "{{ db_disks |default([]) + [ item.stdout_lines ] }}"
+        data_disks: "{{ data_disks|default([]) + [{'device': item.stdout_lines, 'pvname': item.stdout_lines}] }}"
+      with_items:
+      - "{{ disk_names }}"
+
+- name: Configure fs,vgs and lvs
+  hosts: vmnewgroup
+  vars:
+    rollback: true
+    
+    configure_host_disks: true
+  tasks:
+  - block:
+    - include_role:
+        name: hpe-oradb-vm-configure-fs
+    - include_role:
+        name: hpe-orahost
+
+- name: Update DNS, Hostname and modify Database name
+  hosts: vmnewgroup
+  become: yes
+  vars:
+    rollback: true
+    oracle_sid: "{{ database_name }}"
+    domain_name: gse.com
+  tasks:
+  - block:
+    - include_role:
+        name: hpe-configure-hostname-dns
+    - include_role:
+        name: oradb-manage-db
+    
+    - include_role:
+        name: hpe-oradb-enable-archivelog
+    - include_role:
+        name: hpe-oradb-patchlist
+        
+- name: Enable Cohesity for backup
+  hosts: vmnewgroup
+  tasks:
+  - block:
+    - include_role:
+        name: hpe-backup-node-config
+      when: backup_mode is defined and backup_mode|lower == "cohesity"
+    - include_role:
+        name: hpe-backup-initial-config
+      when: backup_mode is defined and backup_mode|lower == "cohesity"
+    - name: SNOW_fetch_facts
+      set_fact:
+        Backup_Status: success
+      when: backup_mode is defined and backup_mode|lower == "cohesity"
+    environment:
+      no_proxy: "{{ cohesity_cluster_ip }}"
+    rescue:
+    - name: SNOW_fetch_facts
+      set_fact:
+        Backup_Status: failed
+    - name: SNOW_fetch_facts
+      debug:
+        msg: "Database deployed successfully, failed to enable backup"
+
+- name: Register to RMAN Catalog Server & Schedule RMAN backup
+  hosts: vmnewgroup
+  vars:
+    oracle_sid: "{{ database_name }}"
+    immediate_full: false
+    immediate_incr: false
+    
+    rman_policy_file: "data/rman_policy.json"
+    jsonInput: "{{ lookup('file', rman_policy_file) | from_json }}"
+    policyName: "silver"
+    
+    rman_policy_level0: "{{ jsonInput[policyName]['policy_level0'] }}"
+    rman_policy_level1: "{{ jsonInput[policyName]['policy_level1'] }}"
+    frequency_level0: "{{ jsonInput[policyName]['frequency_level0'] }}"
+    frequency_level1: "{{ jsonInput[policyName]['frequency_level1'] }}"
+    rman_retention_policy: "{{ jsonInput[policyName]['retention'] }}"
+  tasks:
+  - block:
+    - include_role:
+        name: hpe-rmancatalog-enable
+      when: backup_mode is defined and backup_mode|lower == "rman"
+    - include_role:
+        name: oradb-rman
+      when: backup_mode is defined and backup_mode|lower == "rman"
+    - name: SNOW_fetch_facts
+      set_fact:
+        Backup_Status: success
+      when: backup_mode is defined and backup_mode|lower == "rman"
+    rescue:
+    - name: SNOW_fetch_facts
+      set_fact:
+        Backup_Status: failed
+    - name: SNOW_fetch_facts
+      debug:
+        msg: "Database deployed successfully, failed to enable backup"
