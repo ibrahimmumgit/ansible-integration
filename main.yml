@@ -2,12 +2,6 @@
 - name: olvm
   hosts: localhost
   tasks:
-    - name: import role
-      import_role: 
-        name: OLVM
-        tasks_from: posix.yml
-    - name: import role
-      import_role: 
-        name: OLVM
-        tasks_from: olvm.yml
+    -debug:
+       var: morpheus
       
