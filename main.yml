@@ -3,6 +3,6 @@
   hosts: localhost
   tasks:
     -debug:
-        msg: "hai"
+       msg: "hai"
        #var: morpheus
       
