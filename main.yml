@@ -1,8 +1,7 @@
 ---
-- name: olvm
+- name: get vm details
   hosts: localhost
   tasks:
-    -debug:
-       msg: "hai"
-       #var: morpheus
+    - debug:
+        msg: "hai"
       
