@@ -6,5 +6,11 @@
       set_fact:
         category: "{{ morpheus['customOptions']['category']}}"
     - debug:
-        var: category
-
+        msg: "single instance with file system"
+      when: category == 1
+    - debug:
+        msg: "single instance with ASM"
+      when: category == 2
+    - debug:
+        msg: "Rac (cluster) with asm"
+      when: category == 3
