@@ -4,5 +4,5 @@
   tasks:
 
     - debug:
-        var: {{ morpheus[''customOptions''][''category'']}}
+        var: {{ morpheus['customOptions']['category']}}
 
