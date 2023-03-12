@@ -2,6 +2,7 @@
 - name: test playbook
   hosts: localhost
   tasks:
+
     - debug:
-        var: <%= customOptions.category %>
+        var: {{ morpheus[''customOptions''][''compatiblemode'']}}
 
