@@ -3,11 +3,5 @@
   hosts: localhost
   tasks:
     - debug:
-        msg: "single instance with file system"
-      when: "<%= customOptions.category %>" == 1
-    - debug:
-        msg: "single instance with ASM"
-      when: "<%= customOptions.category %>" == 2
-    - debug:
-        msg: "Rac (cluster) with asm"
-      when: "<%= customOptions.category %>" == 3
+        msg: "<%= customOptions.category %>"
+
