@@ -2,7 +2,9 @@
 - name: test playbook
   hosts: localhost
   tasks:
-
+    - name: morpheus fact
+      set_fact:
+        category: "{{ morpheus['customOptions']['category']}}"
     - debug:
-        var: {{ morpheus['customOptions']['category']}}
+        var: category
 
