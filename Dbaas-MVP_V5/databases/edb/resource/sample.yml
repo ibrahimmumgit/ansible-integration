@@ -2,9 +2,11 @@
 - name: get vm details
   hosts: localhost
   tasks:
-
+    - name: gather vm information
+      set_fact:
+        password: "hai"
 
     - name: print the values
       debug:
-        msg: "hai"
+        var: password
   
