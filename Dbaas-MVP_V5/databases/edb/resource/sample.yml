@@ -4,7 +4,7 @@
   tasks:
     - name: gather vm information
       set_fact:
-        password: "{{ lookup('cypher','password/15/vmwarepassword') }}"
+        password: "{{ lookup('cypher','password=password/15/vmwarepassword') }}"
 
     - name: print the values
       debug:
