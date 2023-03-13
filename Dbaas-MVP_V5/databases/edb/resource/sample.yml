@@ -2,6 +2,17 @@
 - name: get vm details
   hosts: localhost
   tasks:
+    - name: gather vm information
+      community.vmware.vmware_guest_info:
+        hostname: "192.168.9.70"
+        username: "administrator@vsphere.local"
+        password: "{{ lookup('cypher','password/15/vcenterpassword') }}"
+        datacenter: c3
+        name: hpedbaas-100102
+        validate_certs: false
+      delegate_to: localhost
+      register: info
+  
 
     - name: print the values
       debug:
