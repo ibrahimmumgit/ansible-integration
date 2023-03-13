@@ -6,7 +6,7 @@
       community.vmware.vmware_guest_info:
         hostname: "192.168.9.70"
         username: "administrator@vsphere.local"
-        password: ""{{ lookup('cypher','secret=password/ibrahim') }}""
+        password: "{{ lookup('cypher','password/15/vcenterpassword') }}"
         datacenter: c3
         name: hpedbaas-100102
         validate_certs: false
