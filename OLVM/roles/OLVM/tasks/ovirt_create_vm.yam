@@ -1,23 +1,4 @@
 ---
-#
-# Oracle Linux Automation Manager
-#
-# Copyright (c) 2022 Oracle and/or its affiliates.
-# Licensed under the Universal Permissive License v 1.0 as shown at
-# https://oss.oracle.com/licenses/upl.
-#
-# Description: Playbook to create a VM using Oracle Linux Virtualization Manager (OLVM)
-#
-# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
-#
-# A password file is needed which contains the passwords for the local OLVM Manager as well as the root user for the VM.
-# The password file is encrypted using the ansible-vault command. Once encrypted I created a Vault credential using this file.
-# The template for OLAM needs the Vault credential as well as the local user credential.
-# Within the lab OLAM server I placed the file in: /var/lib/awx/projects/files with awx:awx permissions for both file and directory.
-# The files is declared below in the vars_files reference.
-# The vars section contains the OLVM FQDN, user and VM / Template details which should be edited to support your local environment.
-# Details below are examples from within our lab environment.
-
 - hosts: all
   become: yes
   vars_files:
