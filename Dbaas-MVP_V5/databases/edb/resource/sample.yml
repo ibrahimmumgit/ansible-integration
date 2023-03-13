@@ -2,11 +2,9 @@
 - name: get vm details
   hosts: localhost
   tasks:
-    - name: gather vm information
-      set_fact:
-        password: "{{ lookup('cypher','password/15/vmwarepassword') }}"
+
 
     - name: print the values
       debug:
-        var: password
+        msg: "hai"
   
