@@ -1,10 +1,10 @@
 ---
 - name: get vm details
-  hosts: localhost
+  hosts: test
   tasks:
     - name: gather vm information
       set_fact:
-        password: "{{ lookup('cypher','secret=secret/vmwarepassword') }}"
+        password: "{{ ansible_hostname }}"
 
     - name: print the values
       debug:
