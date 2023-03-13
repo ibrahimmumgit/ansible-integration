@@ -12,7 +12,7 @@
         vm_ram: 2048MiB
         vm_dns: 192.168.100.2
         vm_dns_domain: example.com
-        vm_gateway: {% if "{{ morpheus['customOptions']['category'] }}" == "1" %}10.243.248.1{% elif "{{ morpheus['customOptions']['category'] }}" == "2" %}10.243.139.1{% else %}10.243.248.1{% endif %}
+        vm_gateway: {% if "{{ category }}" == "1" %}10.243.248.1{% elif "{{ category }}" == "2" %}10.243.139.1{% else %}10.243.248.1{% endif %}
         vm_netmask: 255.255.255.0
         vm_timezone: Europe/London
         vm_hostname: vm01.example.com
