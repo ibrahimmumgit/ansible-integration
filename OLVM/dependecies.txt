@@ -1,0 +1,39 @@
+ansible-galaxy collection install ovirt.ovirt
+pip3 list | grep ovirt-engine-sdk-python
+
+pip3 install pycurl
+python3 --version
+ansible --version
+yum install libcurl4-gnutls-dev librtmp-dev packages
+yum install libcurl*
+
+yum install librtmp-dev
+yum install librtmp-devel
+kill -9 32145
+yum install librtmp-devel
+pip3 install pycurl
+pip3 install wheel
+pip3 install pycurl
+yum install gcc
+pip3 install pycurl-7.45.2.tar.gz
+pip3 install python3-dev
+yum install python3-dev
+yum install python-dev
+yum install python3-*
+pip3 install pycurl-7.45.2.tar.gz
+pip3 install ovirt-engine-sdk-python==4.4.0
+yum install libevent-devel
+pip3 install ovirt-engine-sdk-python==4.4.0
+sudo yum install python36-devel
+pip3 list
+pip3 install ovirt-engine-sdk-python==4.2.4
+sudo pip3 install ovirt-engine-sdk-python==4.2.4
+yum install libxml2-devel
+sudo pip3 install ovirt-engine-sdk-python==4.2.4
+pip3 list
+pip3 list | grep  ovirt-engine-sdk-python
+ansible-playbook -i localhost -m hostname
+ansible-playbook -i localhost -m shell hostname
+pip3 list | grep  ovirt-engine-sdk-python
+sudo pip3 install ovirt-engine-sdk-python==4.4.0
+pip3 list | grep  ovirt-engine-sdk-python

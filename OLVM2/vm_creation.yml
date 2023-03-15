@@ -1,0 +1,22 @@
+---
+- name: olvm VM creation
+  hosts: localhost
+  tasks: 
+    - name: Fetch the category
+      set_fact: 
+        category: "{{ morpheus['customOptions']['category']}}"
+    - name: Morpheus set_fct for File system and asm 
+      set_fact:
+        olvm_vmname: "{{ morpheus['customOptions']['olvm_vmname']}}"
+        olvm_nodeip: "{{ morpheus['customOptions']['olvm_nodeip']}}"
+    - name: Morpheus set_fct for RAC cluster
+      set_fact:
+        olvm_nodeip2: "{{ morpheus['customOptions']['olvm_nodeip2']}}"
+        olvm_nodeprivips1: "{{ morpheus['customOptions']['olvm_nodeprivips1']}}"
+        olvm_nodeprivips2: "{{ morpheus['customOptions']['olvm_nodeprivips2']}}"
+        olvm_nodevipips1: "{{ morpheus['customOptions']['olvm_nodevipips1']}}"
+        olvm_nodevipips2: "{{ morpheus['customOptions']['olvm_nodevipips2']}}"
+      when: category == "3"
+
+
+     
