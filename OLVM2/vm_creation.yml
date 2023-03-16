@@ -4,7 +4,7 @@
   tasks: 
     - name: Fetch the category
       set_fact: 
-        category: "{{ morpheus['customOptions']['category']}}"
+        category: "{{ morpheus['customOptions']['olvm_category']}}"
     - name: Morpheus set_fct for File system and asm 
       set_fact:
         olvm_vmname: "{{ morpheus['customOptions']['olvm_vmname']}}"
