@@ -1,10 +1,10 @@
 # Node specific information
-NODES=(RVATOOB3DBD23LD RVATOOB4DBD23LD)
-NODEIPS=(10.243.248.67 10.243.248.68)
-NODEPRIVS=(RVATOOB3DBD23LD-priv RVATOOB4DBD23LD-priv)
-NODEPRIVIPS=(10.243.136.82 10.243.136.83)
-NODEVIPS=(RVATOOB3DBD23LD-vip RVATOOB4DBD23LD-vip)
-NODEVIPIPS=(10.243.248.69 10.243.248.70)
+NODES=({{ olvm_vmname olvm_vmname2 }})
+NODEIPS=({{ olvm_nodeip olvm_nodeip2 }})
+NODEPRIVS=({{ olvm_vmname }}-priv {{ olvm_vmname2 }}-priv)
+NODEPRIVIPS=({{ olvm_nodeprivips1 olvm_nodeprivips2}})
+NODEVIPS=({{ olvm_vmname }}-vip {{ olvm_vmname2 }}-vip)
+NODEVIPIPS=({{ olvm_nodevipips1 olvm_nodevipips2 }})
 
 # Common data
 PUBADAP=eth0
