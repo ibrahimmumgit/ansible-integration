@@ -20,22 +20,57 @@
       when: category == "3"
 
     - name: Single instance with asm
-      template:                 
-        src: "netconfig-single-asm.j2"      
-        dest: "/tmp/netconfig-single-asm.ini"
+      block:
+        - name: Single instance with asm | transfer ini files
+          template:                 
+            src: "netconfig-single-asm.j2"      
+            dest: "~/deploycluster/utils/netconfig-single-asm.ini"
+        - name: Single instance with asm | create disk
+          ansible.builtin.shell: deploycluster --createdisk {{ olvm_vmname}}_DATA1,storagedomain=dev-huawei-04,size=100G,shared=false,thin=false
+          args:
+            chdir:  ~/deploycluster/utils/
+        - name: Single instance with asm | create VM
+          ansible.builtin.shell: deploycluster -C OL85-DB1914-04 -M TEST --cloneattach {{ olvm_vmname}}_DATA1 --clonenet nic1=vm248 --clonemem 16G --clonecpu 8,1,1 --clonetype full --clonedeploy -N utils/netconfig-single-asm.ini -P utils/params-single-asm.ini
+          args:
+            chdir:  ~/deploycluster/utils/
       when: category == "1"
 
     - name: Single instance with Filesystem
-      template:                 
-        src: "netconfig-single-fs.j2"      
-        dest: "/tmp/netconfig-single-fs.ini"
+      block:
+        - name: Single instance with asm | transfer ini files
+          template:                 
+            src: "netconfig-single-asm.j2"      
+            dest: "~/deploycluster/utils/netconfig-single-fs.ini"
+        - name: Single instance with asm | create disk
+          ansible.builtin.shell: deploycluster --createdisk {{ olvm_vmname}}_DATA1,storagedomain=dev-huawei-04,size=100G,shared=false,thin=false
+          args:
+            chdir:  ~/deploycluster/utils/
+        - name: Single instance with asm | create VM
+          ansible.builtin.shell: deploycluster -C OL85-DB1914-04 -M TEST --cloneattach {{ olvm_vmname}}_DATA1 --clonenet nic1=vm248 --clonemem 16G --clonecpu 8,1,1 --clonetype full --clonedeploy -N utils/netconfig-single-asm.ini -P utils/params-single-asm.ini
+          args:
+            chdir:  ~/deploycluster/utils/
       when: category == "2"
 
     - name: Rac (cluster) with asm
       template:                 
         src: "netconfig-racolvm.j2"      
         dest: "/tmp/netconfig-racolvm.ini"
+       block:
+        - name: Single instance with asm | transfer ini files
+          template:                 
+            src: "netconfig-single-asm.j2"      
+            dest: "~/deploycluster/utils/netconfig-racolvm.ini"
+        - name: Single instance with asm | create disk
+          ansible.builtin.shell: deploycluster --createdisk {{ olvm_vmname}}_DATA1,storagedomain=dev-huawei-04,size=100G,shared=false,thin=false
+          args:
+            chdir:  ~/deploycluster/utils/
+        - name: Single instance with asm | create VM
+          ansible.builtin.shell: deploycluster -C OL85-DB1914-04 -M TEST --cloneattach {{ olvm_vmname}}_DATA1 --clonenet nic1=vm248 --clonemem 16G --clonecpu 8,1,1 --clonetype full --clonedeploy -N utils/netconfig-single-asm.ini -P utils/params-single-asm.ini
+          args:
+            chdir:  ~/deploycluster/utils/
       when: category == "3"
+      
+      
 
 
 
