@@ -39,7 +39,7 @@
       block:
         - name: Single instance with asm | transfer ini files
           template:                 
-            src: "netconfig-single-asm.j2"      
+            src: "netconfig-single-fs.j2"      
             dest: "~/deploycluster/utils/netconfig-single-fs.ini"
         - name: Single instance with asm | create disk
           ansible.builtin.shell: deploycluster --createdisk {{ olvm_vmname}}_DATA1,storagedomain=dev-huawei-04,size=100G,shared=false,thin=false
@@ -55,7 +55,7 @@
       block:
         - name: Single instance with asm | transfer ini files
           template:                 
-            src: "netconfig-single-asm.j2"      
+            src: "netconfig-racolvm.j2"      
             dest: "/tmp/netconfig-racolvm.ini"
         # - name: Single instance with asm | create disk
         #   ansible.builtin.shell: deploycluster --createdisk {{ olvm_vmname}}_DATA1,storagedomain=dev-huawei-04,size=100G,shared=false,thin=false
