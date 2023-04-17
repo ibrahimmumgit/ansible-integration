@@ -1,0 +1,63 @@
+---
+- name: convert to managed instance\
+  hosts: localhost
+  vars:
+    morpheus_server: morpheus-54-mgt.helionit.io
+    zone_id: 55
+    bearer_token: 4f5aba75-ec1b-4dad-9566-c804675af7f1
+    vm_name: centos-test-1104
+  
+  tasks:  
+    - name: Refresh the clouds
+      uri:
+        url: https://{{ morpheus_server }}/api/zones/{{ zone_id }}/refresh
+        method: post
+        headers:
+          Content-Type: "application/json"
+          Authorization: "Bearer {{ bearer_token }}"
+        return_content: true
+        validate_certs: false
+        status_code: 200
+        timeout: 30
+      register: webpage
+
+    - name: Pause for 1 minutes for clouds refresh
+      ansible.builtin.pause:
+        minutes: 1
+
+    - name: Reterives the instance id
+      uri:
+        url: https://{{ morpheus_server }}/api/servers?name={{ vm_name }}
+        method: Get
+        headers:
+          Content-Type: "application/json"
+          Authorization: "Bearer {{ bearer_token }}"
+        return_content: true
+        validate_certs: false
+        status_code: 200
+        timeout: 30
+      register: webpage
+
+    - debug:
+        var: webpage.content
+
+    - name:
+      set_fact:
+        instance_id: "{{ (webpage.content | from_json).servers[0].id }}"
+        api_key:  "{{ (webpage.content | from_json).servers[0].apiKey }}"
+
+
+    - name: Convert the instance to managed
+      uri:
+        url: https://{{ morpheus_server }}/api/servers/{{ instance_id }}/make-managed
+        method: put
+        headers:
+          Content-Type: "application/json"
+          Authorization: "Bearer {{ bearer_token }}"
+        return_content: yes
+        validate_certs: false
+        status_code: 200
+        timeout: 30
+      register: webpage
+
+
