@@ -1,6 +1,6 @@
 ---
 - name: get vm details
-  hosts: all
+  hosts: localhost
   tasks:
     - name:
       shell: hostname
