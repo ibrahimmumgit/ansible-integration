@@ -1,6 +1,6 @@
 ---
 - name: get vm details
-  hosts: localhost
+  hosts: all
   tasks:
     - debug:
         var: morpheus
