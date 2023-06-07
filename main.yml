@@ -2,9 +2,6 @@
 - name: get vm details
   hosts: localhost
   tasks:
-    - name:
-      shell: hostname
-      register: host_details
     - debug:
-        var: host_details
+        var: morpheus
       
