@@ -2,32 +2,7 @@
 - name: test playbook
   hosts: localhost
   tasks:
-    - name: morpheus fact
-      set_fact:
-        category: "{{ morpheus['customOptions']['category']}}"
-        olvm_user: shayler@internal
-        olvm_cafile: /etc/pki/ovirt-engine/ca.pem
-        olvm_cluster: cluster03
-        olvm_template: OL8U5_x86_64-olvm-b107_nov21_NODE03
-        vm_ram: 2048MiB
-        vm_dns: 192.168.100.2
-        vm_dns_domain: example.com
-        #vm_gateway: "{% if "{{ category }}" == "1" %}10.243.248.1{% elif "{{ category }}" == "2" %}10.243.139.1{% else %}10.243.248.1{% endif %}"
-        vm_gateway: "{% if morpheus['customOptions']['category']=='2' %}10.243.139.1{% else %}10.243.248.1{% endif %}"
-        vm_netmask: 255.255.255.0
-        vm_timezone: Europe/London
-        vm_hostname: vm01.example.com
-        vm_ip_address: 192.168.100.41
-        vm_name: SimonVM1
-    - debug:
-        msg: "single instance with file system"
-      when: category == "1"
-    - debug:
-        msg: "single instance with ASM"
-      when: category == "2"
-    - debug:
-        msg: "Rac (cluster) with asm"
-      when: category == "3"
-    - debug:
-        var: vm_gateway
+    - name: test ansible
+      debug:
+        msg; "hai"
         
