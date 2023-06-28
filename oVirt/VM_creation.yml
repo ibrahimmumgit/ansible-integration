@@ -1,0 +1,32 @@
+---
+- name: Create oVirt Virtual Machine
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    vm_name: ibrahim-vm
+    cluster_name: Default
+    template_name: CentOS7
+    vm_memory_mb: 4096
+    vm_cpus: 2
+    ovirt_auth:
+      url: "https://ovirt.ovirt.c3/ovirt-engine/api"
+      username: "admin@internal"
+      password: "HP1nvent"
+      
+
+  tasks:
+    - name: Create oVirt Virtual Machine
+      ovirt_vms:
+        auth: "{{ ovirt_auth }}"
+        cluster: "{{ cluster_name }}"
+        name: "{{ vm_name }}"
+        template: "{{ template_name }}"
+        memory: "{{ vm_memory_mb }}"
+        cpu_cores: "{{ vm_cpus }}"
+        state: running
+      register: result
+
+    - name: Display VM details
+      debug:
+        var: result
