@@ -17,7 +17,7 @@
 
   tasks:
     - name: Create oVirt Virtual Machine
-      ovirt_vms:
+      ovirt_vm:
         auth: "{{ ovirt_auth }}"
         cluster: "{{ cluster_name }}"
         name: "{{ vm_name }}"
