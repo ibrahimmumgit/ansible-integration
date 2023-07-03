@@ -84,7 +84,7 @@ variable "app_os_password" {
 variable "dev_database" {
     description = "This specifies the database name"
     type = string
-    dev = "db_3tier"
+    default = "db_3tier"
 }
 
 // variable "dev_database_version" {
