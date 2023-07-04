@@ -6,7 +6,7 @@ variable "resource_group" {
 variable "appvm" {
     description = "This specifies the database name"
     type = string
-    default = "<%=customOptions.appvm%>"
+    #default = "<%=customOptions.appvm%>"
 }
 
 variable "webvm" {
