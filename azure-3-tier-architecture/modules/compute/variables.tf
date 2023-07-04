@@ -3,17 +3,7 @@ variable "resource_group" {
     type = string
 }   
 
-variable "appvm" {
-    description = "This specifies the database name"
-    type = string
-    #default = "<%=customOptions.appvm%>"
-}
 
-variable "webvm" {
-    description = "This specifies the database name"
-    type = string
-    default = "<%=customOptions.webvm%>"
-}
 
 variable "location" {
     description = "This specifies the location of the virtual machine" 
