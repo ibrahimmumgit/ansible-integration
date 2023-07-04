@@ -1,6 +1,5 @@
 resource "azurerm_sql_server" "dev" {
-    #name = var.dev_database
-    name = "<%=customOptions.dbvm%>"
+    name = var.dev_database
     resource_group_name = var.resource_group
     location = var.location
     version = var.dev_database_version
