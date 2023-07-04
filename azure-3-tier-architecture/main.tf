@@ -39,8 +39,8 @@ module "compute" {
 
   app_subnet_id = module.networking.app_subnet_id
 
-  username = "ukponoobott"
-  password = "Abcd@1234"
+  username = "cncadmin"
+  password = "Password!234"
 
 
 }
