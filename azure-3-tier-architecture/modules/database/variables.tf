@@ -13,7 +13,7 @@ variable "location" {
 variable "dev_database" {
     description = "This specifies the database name"
     type = string
-    default = "<%=customOptions.dbvm%>"
+   
 }
 
 variable "dev_database_version" {
