@@ -1,6 +1,7 @@
 variable "resource_group" {
     description = "This specifies the resource group of the db"
     type = string
+    default = "<%=customOptions.dbvm%>"
 }   
 
 variable "location" {
