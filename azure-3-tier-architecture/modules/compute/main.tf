@@ -12,7 +12,7 @@ resource "azurerm_network_interface" "web-nic" {
 }
 
 resource "azurerm_windows_virtual_machine" "web-vm" {
-  name                = "<%=customOptions.webvm%>"
+  name                = var.webvm
   resource_group_name = var.resource_group
   location            = var.location
   size                = var.sku
@@ -47,7 +47,7 @@ resource "azurerm_network_interface" "app-nic" {
 }
 
 resource "azurerm_windows_virtual_machine" "app-vm" {
-  name                = "<%=customOptions.appvm%>"
+  name                = var.appvm
   resource_group_name = var.resource_group
   location            = var.location
   size                = var.sku
