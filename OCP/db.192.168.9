@@ -1,0 +1,24 @@
+$TTL    604800
+@       IN      SOA     ocp4-services.ocp.local. admin.ocp.local. (
+                  6     ; Serial
+             604800     ; Refresh
+              86400     ; Retry
+            2419200     ; Expire
+             604800     ; Negative Cache TTL
+)
+
+; name servers - NS records
+    IN      NS      ocp4-services.ocp.local.
+
+; name servers - PTR records
+43    IN    PTR    ocp4-services.ocp.local.
+
+; OpenShift Container Platform Cluster - PTR records
+44    IN    PTR    ocp4-bootstrap.lab.ocp.local.
+45    IN    PTR    ocp4-control-plane-1.lab.ocp.local.
+46    IN    PTR    ocp4-control-plane-2.lab.ocp.local.
+47    IN    PTR    ocp4-control-plane-3.lab.ocp.local.
+48    IN    PTR    ocp4-compute-1.lab.ocp.local.
+49    IN    PTR    ocp4-compute-2.lab.ocp.local.
+43    IN    PTR    api.lab.ocp.local.
+43    IN    PTR    api-int.lab.ocp.local.

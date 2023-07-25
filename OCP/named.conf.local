@@ -1,0 +1,9 @@
+zone "ocp.local" {
+    type master;
+    file "/etc/named/zones/db.ocp.local"; # zone file path
+};
+
+zone "9.168.192.in-addr.arpa" {
+    type master;
+    file "/etc/named/zones/db.192.168.9";  # 192.168.9.0/24 subnet
+};

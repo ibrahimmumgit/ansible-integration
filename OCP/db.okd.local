@@ -1,0 +1,38 @@
+$TTL    604800
+@       IN      SOA     ocp4-services.ocp.local. admin.ocp.local. (
+                  1     ; Serial
+             604800     ; Refresh
+              86400     ; Retry
+            2419200     ; Expire
+             604800     ; Negative Cache TTL
+)
+
+; name servers - NS records
+    IN      NS      ocp4-services
+
+; name servers - A records
+ocp4-services.ocp.local.          IN      A       192.168.9.43
+
+; OpenShift Container Platform Cluster - A records
+ocp4-bootstrap.lab.ocp.local.        IN      A      192.168.9.44
+ocp4-control-plane-1.lab.ocp.local.        IN      A      192.168.9.45
+ocp4-control-plane-2.lab.ocp.local.         IN      A      192.168.9.46
+ocp4-control-plane-3.lab.ocp.local.         IN      A      192.168.9.47
+ocp4-compute-1.lab.ocp.local.        IN      A      192.168.9.48
+ocp4-compute-2.lab.ocp.local.        IN      A      192.168.9.49
+
+; OpenShift internal cluster IPs - A records
+api.lab.ocp.local.    IN    A    192.168.9.43
+api-int.lab.ocp.local.    IN    A    192.168.9.43
+*.apps.lab.ocp.local.    IN    A    192.168.9.43
+etcd-0.lab.ocp.local.    IN    A     192.168.9.45
+etcd-1.lab.ocp.local.    IN    A     192.168.9.46
+etcd-2.lab.ocp.local.    IN    A    192.168.9.47
+console-openshift-console.apps.lab.ocp.local.     IN     A     192.168.9.43
+oauth-openshift.apps.lab.ocp.local.     IN     A     192.168.9.43
+
+; OpenShift internal cluster IPs - SRV records
+_etcd-server-ssl._tcp.lab.ocp.local.    86400     IN    SRV     0    10    2380    etcd-0.lab
+_etcd-server-ssl._tcp.lab.ocp.local.    86400     IN    SRV     0    10    2380    etcd-1.lab
+_etcd-server-ssl._tcp.lab.ocp.local.    86400     IN    SRV     0    10    2380    etcd-2.lab
+
