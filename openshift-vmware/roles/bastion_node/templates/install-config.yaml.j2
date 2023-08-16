@@ -1,0 +1,32 @@
+apiVersion: v1
+baseDomain: '{{ openshift_base_domain }}'
+{% if openshift_proxy is defined %}
+proxy:
+  httpProxy: '{{ openshift_proxy.http }}'
+  httpsProxy: '{{ openshift_proxy.https }}'
+  noProxy: '.{{ openshift_base_domain }},{{ openshift_proxy.no_proxy }}'
+{% endif %}
+compute:
+- name: worker
+  replicas: {{ openshift_worker_replicas_number }}
+  hyperthreading: Enabled
+controlPlane:
+  name: master
+  replicas: {{ openshift_master_replicas_number }}
+  hyperthreading: Enabled
+metadata:
+  name: '{{ openshift_cluster_name }}'
+{% if openshift_networking is defined %}
+networking:
+  clusterNetwork:
+  - cidr: {{ openshift_networking.pod_cidr }}
+    hostPrefix: {{ openshift_networking.host_prefix }}
+  networkType: {{ openshift_networking.type }}
+  serviceNetwork:
+  - {{ openshift_networking.service_cidr }}
+{% endif %}
+platform:
+  none: {}
+fips: false
+pullSecret: '{{ openshift_pull_secret | default('') }}'
+sshKey: '{{ ssh_key }}'

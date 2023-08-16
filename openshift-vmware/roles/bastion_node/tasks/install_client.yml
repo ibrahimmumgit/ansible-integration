@@ -1,0 +1,22 @@
+---
+- name: Stat ocp client
+  stat:
+    path: "{{ openshift_binary_dir }}/{{ openshift_oc_client_binary_name }}"
+  register: r_oc_client_bin
+  tags:
+    - bastion_config
+
+- name: Get ocp client
+  unarchive:
+    src: "{{ openshift_oc_client_binary_url }}"
+    dest: "{{ openshift_binary_dir }}"
+    mode: "{{ openshift_oc_client_binary_mode }}"
+    remote_src: "true"
+  when: not r_oc_client_bin.stat.exists
+  tags:
+    - bastion_config
+
+- name: Enable ocp auto-completion
+  shell: "{{ openshift_oc_client_cmd }} completion bash >/etc/bash_completion.d/openshift"
+  tags:
+    - bastion_config

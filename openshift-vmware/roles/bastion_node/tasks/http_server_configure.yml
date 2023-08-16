@@ -1,0 +1,34 @@
+---
+- name: Install http packages
+  dnf:
+    name: "{{ http_server_package_name }}"
+    state: "installed"
+
+- name: Start http service
+  service:
+    name: "{{ http_server_service_name }}"
+    state: "started"
+
+- name: Create ignition files http directory
+  file:
+    path: "{{ http_server_data_dir }}/{{ http_server_ignition_files_dir_name }}"
+    state: "directory"
+    owner: "{{ http_server_user }}"
+    group: "{{ http_server_group }}"
+    recurse: true
+
+- name: Allow http on firewalld
+  firewalld:
+    service: "{{ item }}"
+    state: enabled
+    permanent: "true"
+  loop: "{{ firewall_service_rules }}"
+  notify: reload_firewalld
+
+- name: Allow port on firewalld
+  firewalld:
+    port: "{{ item }}"
+    state: enabled
+    permanent: "true"
+  loop: "{{ firewall_port_rules }}"
+  notify: reload_firewalld

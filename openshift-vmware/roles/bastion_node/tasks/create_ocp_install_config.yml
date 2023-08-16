@@ -1,0 +1,57 @@
+---
+- name: Create working directory
+  file:
+    path: "{{ openshift_working_directory_path }}"
+    state: directory
+  tags:
+    - bastion_config
+
+- name: Copy install-config.yaml
+  template:
+    src: "{{ openshift_bastion_config_yaml_name }}.j2"
+    dest: "{{ openshift_working_directory_path }}/{{ openshift_bastion_config_yaml_name }}"
+  tags:
+    - bastion_config
+
+- name: Backup install-config.yaml file
+  copy:
+    src: "{{ openshift_working_directory_path }}/{{ openshift_bastion_config_yaml_name }}"
+    dest: "{{ openshift_working_directory_path }}/{{ openshift_bastion_config_yaml_name }}.bak"
+    remote_src: true
+  tags:
+    - bastion_config
+
+- name: Create manifests
+  shell:
+    cmd: "{{ _openshift_installer_cmd }} --dir {{ openshift_working_directory_path }} create manifests"
+  register: manifest_creation
+
+- name: Set mastersSchedulable to false for cluster scheduler
+  template:
+    src: "{{ openshift_cluster_scheduler_manifest.filename }}.j2"
+    dest: "{{ openshift_working_directory_path }}/{{ openshift_manifests_dir_name }}/{{ openshift_cluster_scheduler_manifest.filename }}"
+
+- name: Create ignition config files
+  shell:
+    cmd: "{{ _openshift_installer_cmd }} --dir {{ openshift_working_directory_path }} create ignition-configs"
+  register: ignition_creation
+
+- name: Create merge-bootstrap ignition file
+  template:
+    src: "{{ openshift_merge_bootstrap_ign_name }}.j2"
+    dest: "{{ openshift_working_directory_path }}/{{ openshift_merge_bootstrap_ign_name }}"
+
+- name: Encode ignition files into base64
+  shell:
+    cmd: "base64 -w0 < {{ item }}.ign > {{ item }}.64"
+    chdir: "{{ openshift_working_directory_path }}"
+  loop: "{{ openshift_ignition_config_files_root_names }}"
+
+- name: Copy ignition files to http server
+  copy:
+    src: "{{ openshift_working_directory_path }}/{{ item }}.ign"
+    dest: "{{ http_server_data_dir }}/{{ http_server_ignition_files_dir_name }}/{{ item }}.ign"
+  loop:
+    - "master"
+    - "worker"
+    - "bootstrap"

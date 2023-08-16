@@ -1,0 +1,19 @@
+---
+# tasks file for bastion node configuration
+- include_tasks: generate_ssh.yml
+  tags:
+    - bastion_config
+
+- include_tasks: download_binary.yml
+  tags:
+    - bastion_config
+
+- include_tasks: install_client.yml
+  tags:
+    - bastion_config
+
+- include_tasks: http_server_configure.yml
+
+- include_tasks: create_ocp_install_config.yml
+  tags:
+    - bastion_config

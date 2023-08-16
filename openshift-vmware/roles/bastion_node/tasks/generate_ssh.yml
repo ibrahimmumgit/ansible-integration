@@ -1,0 +1,31 @@
+---
+- name: set fact for ssh_key_path
+  set_fact:
+    ssh_key_path: "{{ ansible_env.HOME }}/.ssh/{{ ssh_key_name }}"
+  tags:
+    - bastion_config
+
+- name: Check the key path
+  stat:
+    path: "{{ ssh_key_path }}"
+  register: ssh_key_exists
+  tags:
+    - bastion_config
+
+- name: Generate ssh key
+  shell: "ssh-keygen -f {{ ssh_key_path }} -N ''"
+  when: not ssh_key_exists.stat.exists
+  tags:
+    - bastion_config
+
+- name: set_fact the ssh_key_pub_path
+  set_fact:
+    ssh_key_pub_path: "{{ ssh_key_path }}.pub"
+  tags:
+    - bastion_config
+
+- name: set_fact the ssh_key
+  set_fact:
+    ssh_key: "{{ lookup('file', ssh_key_pub_path) }}"
+  tags:
+    - bastion_config
