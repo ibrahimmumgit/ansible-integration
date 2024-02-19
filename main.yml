@@ -2,6 +2,9 @@
 - name: get vm details
   hosts: all
   tasks:
+    - command: hostname
+      register: output
     - debug:
-        var: morpheus
+        var: output
+      
       
