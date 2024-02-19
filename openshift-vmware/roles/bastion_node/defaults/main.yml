@@ -57,7 +57,7 @@ http_server_service_name: "httpd"
 http_server_user: "apache"
 http_server_group: "apache"
 http_server_data_dir: "/var/www/html"
-http_server_ignition_files_dir_name: "now_ignition"
+http_server_ignition_files_dir_name: "ansible_ignition"
 
 # Firewalld rules
 

@@ -1,0 +1,29 @@
+---
+- name: get vm template folder
+  vmware_guest_find:
+    hostname: "{{ vcenter.host }}"
+    username: "{{ vcenter.username }}"
+    password: "{{ vcenter.password }}"
+    validate_certs: no
+    datacenter: "{{ vcenter.datacenter }}"
+    name: "{{ openshift_template_name }}"
+  register: r_template_folder
+
+- name: set fact vm_template_folder
+  set_fact:
+    vm_template_folder: "{{ r_template_folder.folders | select('search', vcenter.datacenter) | first }}"
+
+- name: get vm template facts
+  vmware_guest_facts:
+    hostname: "{{ vcenter.host }}"
+    username: "{{ vcenter.username }}"
+    password: "{{ vcenter.password }}"
+    validate_certs: no
+    datacenter: "{{ vcenter.datacenter }}"
+    folder: "{{ vm_template_folder }}"
+    name: "{{ openshift_template_name }}"
+  register: r_vm_facts
+
+- name: set fact vm_template_uuid
+  set_fact:
+    openshift_template_uuid: "{{ r_vm_facts.instance.hw_product_uuid }}"

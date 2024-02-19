@@ -1,0 +1,24 @@
+---
+- name: get vm node facts
+  vmware_guest_facts:
+    hostname: "{{ vcenter.host }}"
+    username: "{{ vcenter.username }}"
+    password: "{{ vcenter.password }}"
+    validate_certs: no
+    datacenter: "{{ vcenter.datacenter }}"
+    folder: "{{ vcenter.folder }}"
+    name: "{{ item }}"
+  loop: "{{ bootstrap_nodes_list + master_nodes_list + worker_nodes_list}}"
+  register: r_node_facts
+
+- name: "initialize r_macaddresses"
+  set_fact:
+    r_macaddresses: []
+
+- name: "set nodes macaddresses"
+  set_fact:
+    r_macaddresses: "{{ r_macaddresses }} + [ '{{ item.instance.hw_name }} -> {{ item.instance.hw_eth0.macaddress }}' ]"
+  loop: "{{ r_node_facts.results }}"
+
+- debug:
+    var: r_macaddresses

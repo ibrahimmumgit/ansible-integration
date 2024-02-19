@@ -1,6 +1,6 @@
 ---
 - name: Create oVirt Virtual Machine
-  hosts: ocp
+  hosts: bastion
   tasks: 
     - name: Ignition Generation
       include_role:

@@ -1,2 +1,8 @@
 ---
 # tasks file for ocp
+
+- include_tasks: get_template_uuid.yml
+- include_tasks: bootstrap_node.yml
+- include_tasks: master_node.yml
+- include_tasks: worker_node.yml
+- include_tasks: node_facts.yml

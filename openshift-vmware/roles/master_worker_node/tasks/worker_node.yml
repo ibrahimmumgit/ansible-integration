@@ -1,0 +1,75 @@
+---
+- name: Set VM config param for ignition file
+  set_fact:
+    openshift_ignition_config_param:
+      - key: guestinfo.ignition.config.data
+        value: "{{ lookup('file', worker_node.ignition_file_path) }}"
+
+- name: Set VM config parameters
+  set_fact:
+    openshift_config_params: "{{ openshift_common_config_params + openshift_ignition_config_param }}"
+
+- name: Clone from openshift cluster for worker
+  vmware_guest:
+    hostname: "{{ vcenter.host }}"
+    username: "{{ vcenter.username }}"
+    password: "{{ vcenter.password }}"
+    validate_certs: no
+    datacenter: "{{ vcenter.datacenter }}"
+    folder: "{{ vcenter.folder }}"
+    cluster: "{{ vcenter.cluster }}"
+    template: "{{ openshift_template_uuid }}"
+    name: "{{ item.name }}.{{ openshift_cluster_name }}.{{ openshift_base_domain }}"
+    state: "poweredoff"
+    disk:
+    - datastore: "{{ vcenter.default_datastore }}"
+      type: "{{ worker_node.disk.type }}"
+      size_gb: "{{ worker_node.disk.size | default(120) }}"
+    hardware:
+      memory_mb: "{{ worker_node.ram }}"
+      memory_reservation_lock: true
+      memory_reservation: "{{ worker_node.ram | default(16384) }}"
+      num_cpus: "{{ worker_node.cpus | default(4) }}"
+    networks:
+    - name: "{{ vcenter.vm_network }}"
+      start_connected: true
+      allow_guest_control: yes
+      connected: true
+      type: static
+      ip: "{{ item.ipaddr }}"
+      netmask: "{{ vcenter.netmask }}"
+      gateway: "{{ vcenter.gateway }}"
+      dns_servers: "{{ vcenter.dns }}"
+    customvalues: "{{ openshift_config_params }}"
+  loop: "{{ worker_nodes_list }}"
+
+
+- name: Add custom attributes to openshift cluster
+  vmware_guest_custom_attributes:
+    hostname: "{{ vcenter.host }}"
+    username: "{{ vcenter.username }}"
+    password: "{{ vcenter.password }}"
+    validate_certs: no
+    datacenter: "{{ vcenter.datacenter }}"
+    folder: "{{ vcenter.folder }}"
+    name: "{{ item.name }}.{{ openshift_cluster_name }}.{{ openshift_base_domain }}"
+    state: present
+    attributes:
+      - name: "disk.EnableUUID"
+        value: "TRUE"
+      - name: "guestinfo.ignition.config.data.encoding"
+        value: "base64"
+      - name: "guestinfo.ignition.config.data"
+        value: "{{ lookup('file', worker_node.ignition_file_path) }}"
+  loop: "{{ worker_nodes_list }}"
+
+- name: Set the state of worker node to poweron
+  vmware_guest_powerstate:
+    hostname: "{{ vcenter.host }}"
+    username: "{{ vcenter.username }}"
+    password: "{{ vcenter.password }}"
+    validate_certs: no
+    folder: "{{ vcenter.folder }}"
+    name: "{{ item.name }}.{{ openshift_cluster_name }}.{{ openshift_base_domain }}"
+    state: "powered-on"
+  loop: "{{ worker_nodes_list }}"

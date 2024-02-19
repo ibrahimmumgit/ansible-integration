@@ -1,2 +1,21 @@
 ---
 # defaults file for ocp
+
+---
+# defaults file for provision_vmware_node
+
+# openshift_rhcos_template_name: "rhcos-4.2.0-x86_64-template"
+
+openshift_working_directory_name: "{{ openshift_cluster_name }}"
+ignition_files_path: "{{ ansible_env.HOME }}/{{ openshift_working_directory_name }}"
+
+openshift_common_config_params:
+  - key: "sched.cpu.latencySensitivity"
+    value: "high"
+  - key: "disk.EnableUUID"
+    value: "TRUE"
+  - key: "guestinfo.ignition.config.data.encoding"
+    value: "base64"
+
+
+
